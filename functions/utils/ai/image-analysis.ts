@@ -26,12 +26,12 @@ const AI_INPUT_MAX_BYTES = 2 * 1024 * 1024; // 仅用于内存文件的兜底限
 
 export const AI_MODEL = "@cf/llava-hf/llava-1.5-7b-hf";
 export const AI_MAX_TOKENS = 40;
-export const AI_OUTPUT_PROMPT =
-  "Return comma-separated image search tags. " +
-  "Only the most important tags. " +
-  "Prefer subject, action, object, scene. " +
-  "No duplicates, generic words, or sentences.";
 
+export const AI_OUTPUT_PROMPT =
+  "Return precise, comma-separated image tags. " +
+  "Priority: subject > action > style > scene. " +
+  "No generic words, no duplicates, no sentences. Only pure keywords.";
+  
 export function isSupportedImage(mimeType?: string | null, fileName?: string): boolean {
   if (mimeType) return SUPPORTED_IMAGE_PREFIXES.some((p) => mimeType.startsWith(p));
   if (fileName) {

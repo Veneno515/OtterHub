@@ -71,11 +71,14 @@ export class R2Adapter extends BaseAdapter {
   async uploadStream(
     stream: ReadableStream,
     metadata: FileMetadata,
+    waitUntil?: (p: Promise<any>) => void,
+    mimeType?: string,
   ): Promise<{ key: string }> {
     const fileId = getUniqueFileId();
     const fileName = metadata.fileName;
     const fileExtension = (fileName.split(".").pop() ?? "").toLowerCase();
-    const contentType = getContentTypeByExt(fileExtension);
+    // 优先使用传入的 mimeType,否则根据扩展名推导
+    const contentType = mimeType || getContentTypeByExt(fileExtension);
 
     // 根据文件类型确定前缀
     let fileType: FileType;

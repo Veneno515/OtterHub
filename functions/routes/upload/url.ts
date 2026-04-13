@@ -67,7 +67,12 @@ urlUploadRoutes.post(
         tags: isNsfw ? [FileTag.NSFW] : [],
       };
 
-      const { key } = await dbAdapter.uploadStream(response.body, metadata, c.executionCtx.waitUntil.bind(c.executionCtx));
+      const { key } = await dbAdapter.uploadStream(
+        response.body, 
+        metadata, 
+        c.executionCtx.waitUntil.bind(c.executionCtx),
+        mimeType
+      );
       return ok(c, { key, fileSize });
     } catch (error: any) {
       console.error('Remote upload error:', error);

@@ -29,6 +29,7 @@ export abstract class BaseAdapter implements DBAdapter {
     stream: ReadableStream,
     metadata: FileMetadata,
     waitUntil?: (p: Promise<any>) => void,
+    mimeType?: string,
   ): Promise<{ key: string }>;
 
   abstract get(key: string, req?: Request): Promise<Response>;

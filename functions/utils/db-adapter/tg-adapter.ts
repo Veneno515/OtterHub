@@ -152,11 +152,14 @@ export class TGAdapter extends BaseAdapter {
     stream: ReadableStream,
     metadata: FileMetadata,
     waitUntil?: (p: Promise<any>) => void,
+    mimeType?: string,
   ): Promise<{ key: string }> {
     // Telegram 不支持流式上传，需要转为 Blob
     const response = new Response(stream);
     const blob = await response.blob();
-    return this.uploadFile(blob, metadata, waitUntil);
+    // 如果提供了 mimeType，创建带类型的 Blob
+    const typedBlob = mimeType ? new Blob([blob], { type: mimeType }) : blob;
+    return this.uploadFile(typedBlob, metadata, waitUntil);
   }
 
   /**
