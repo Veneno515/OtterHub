@@ -22,13 +22,14 @@ type AIImageSource = {
 };
 
 const SUPPORTED_IMAGE_PREFIXES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-const AI_INPUT_MAX_BYTES = 5 * 1024 * 1024; // 仅用于内存文件的兜底限制
+const AI_INPUT_MAX_BYTES = 2 * 1024 * 1024; // 仅用于内存文件的兜底限制
 const AI_MODEL = "@cf/llava-hf/llava-1.5-7b-hf";
+
 const AI_OUTPUT_PROMPT =
-  "Output 5-10 comma-separated visual tags for search. " +
-  "Order: subject, action, objects, scene, color, style. " +
-  "Use concrete nouns. Skip vague words, minor details, and duplicates. " +
-  "NO sentences, markdown, or explanations.";
+  "5-10 comma-separated image search tags. " +
+  "Prioritize subject, action, object, scene. " +
+  "Use short concrete phrases. " +
+  "No duplicates, no tiny details, max one color, no sentences.";
 
 export function isSupportedImage(mimeType?: string | null, fileName?: string): boolean {
   if (mimeType) return SUPPORTED_IMAGE_PREFIXES.some((p) => mimeType.startsWith(p));
@@ -108,7 +109,7 @@ async function resolveAnalysisBuffer(
     }
   }
 
-  // 2. 网络链路失败时，兜底使用当前内存中的 file 对象 (仅限小于 5MB)
+  // 2. 网络链路失败时，兜底使用当前内存中的 file 对象 (仅限小于 2MB)
   if (file.size <= AI_INPUT_MAX_BYTES) {
     return file.arrayBuffer();
   }
