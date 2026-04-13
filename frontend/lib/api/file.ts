@@ -282,7 +282,7 @@ export async function toggleLike(key: string): Promise<boolean> {
  */
 export async function editMetadata(
   key: string,
-  updates: { fileName?: string; tags?: string[] }
+  updates: { fileName?: string; tags?: string[]; desc?: string }
 ): Promise<{ metadata: any }> {
   const data = await unwrap<any>(
     client.file[":key"].meta.$patch({

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { editMetadata } from "@/lib/api";
-import { FileItem } from "@shared/types";
+import { FileItem, MAX_FILENAME_LENGTH, MAX_DESC_LENGTH } from "@shared/types";
 import { Label } from "@radix-ui/react-dropdown-menu";
 import { TagSelector } from "@/components/TagSelector";
 import {
@@ -16,12 +16,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 interface EditMetadataDialogProps {
   file: FileItem | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess?: (metadata: { fileName: string; tags: string[] }) => void;
+  onSuccess?: (metadata: { fileName: string; tags: string[]; desc?: string }) => void;
 }
 
 export function FileEditDialog({
@@ -33,7 +34,16 @@ export function FileEditDialog({
   const [baseName, setBaseName] = useState("");
   const [extension, setExtension] = useState("");
   const [tags, setTags] = useState<string[]>([]);
+  const [desc, setDesc] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // 计算完整文件名长度
+  const fullFileNameLength = baseName.length + extension.length;
+  
+  // 验证状态
+  const isFileNameValid = baseName.trim().length > 0 && fullFileNameLength <= MAX_FILENAME_LENGTH;
+  const isDescValid = desc.length <= MAX_DESC_LENGTH;
+  const canSubmit = isFileNameValid && isDescValid;
 
   // 初始化表单数据
   useEffect(() => {
@@ -51,6 +61,7 @@ export function FileEditDialog({
       }
       
       setTags(file.metadata?.tags || []);
+      setDesc(file.metadata?.desc || "");
     }
   }, [file]);
 
@@ -59,8 +70,13 @@ export function FileEditDialog({
 
     if (!file) return;
 
-    if (!baseName.trim()) {
-      toast.warning("文件名不能为空");
+    if (!isFileNameValid) {
+      toast.warning(baseName.trim() ? "文件名过长" : "文件名不能为空");
+      return;
+    }
+
+    if (!isDescValid) {
+      toast.warning("描述过长");
       return;
     }
 
@@ -70,6 +86,7 @@ export function FileEditDialog({
       const updatedMetadata = {
         fileName: `${baseName.trim()}${extension}`,
         tags,
+        desc: desc.trim() || undefined,
       };
 
       await editMetadata(file.name, updatedMetadata);
@@ -107,7 +124,7 @@ export function FileEditDialog({
                 value={baseName}
                 onChange={(e) => setBaseName(e.target.value)}
                 placeholder="输入文件名"
-                className="bg-secondary/30 border-glass-border text-foreground placeholder:text-foreground/60 focus-visible:ring-primary flex-1"
+                className={`bg-secondary/30 border-glass-border text-foreground placeholder:text-foreground/60 focus-visible:ring-primary flex-1 ${!isFileNameValid && baseName ? "border-red-500/50 focus-visible:ring-red-500" : ""}`}
                 disabled={isSubmitting}
               />
               {extension && (
@@ -115,6 +132,14 @@ export function FileEditDialog({
                   {extension}
                 </span>
               )}
+            </div>
+            <div className="flex justify-between items-center text-xs">
+              <span className={!isFileNameValid && baseName ? "text-red-400" : "text-foreground/40"}>
+                {baseName.trim() ? (fullFileNameLength > MAX_FILENAME_LENGTH ? "文件名过长" : "") : (baseName ? "文件名不能为空" : "")}
+              </span>
+              <span className={`${fullFileNameLength > MAX_FILENAME_LENGTH ? "text-red-400" : "text-foreground/40"}`}>
+                {fullFileNameLength}/{MAX_FILENAME_LENGTH}
+              </span>
             </div>
           </div>
 
@@ -129,6 +154,25 @@ export function FileEditDialog({
             />
           </div>
 
+          {/* 描述 */}
+          <div className="space-y-2">
+            <Label className="text-foreground/80">描述</Label>
+            <Textarea
+              id="desc"
+              value={desc}
+              onChange={(e) => setDesc(e.target.value)}
+              placeholder="添加文件描述..."
+              className={`bg-secondary/30 border-glass-border text-foreground placeholder:text-foreground/60 focus-visible:ring-primary max-h-[120px] resize-none ${!isDescValid ? "border-red-500/50 focus-visible:ring-red-500" : ""}`}
+              disabled={isSubmitting}
+              rows={3}
+            />
+            <div className="flex justify-end text-xs">
+              <span className={`${desc.length > MAX_DESC_LENGTH ? "text-red-400" : "text-foreground/40"}`}>
+                {desc.length}/{MAX_DESC_LENGTH}
+              </span>
+            </div>
+          </div>
+
           <DialogFooter className="gap-2">
             <Button
               type="button"
@@ -141,8 +185,8 @@ export function FileEditDialog({
             </Button>
             <Button
               type="submit"
-              disabled={isSubmitting}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              disabled={isSubmitting || !canSubmit}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50"
             >
               {isSubmitting ? (
                 <>
