@@ -199,14 +199,14 @@ export function TrashSheet({ open, onOpenChange }: TrashSheetProps) {
           </SheetDescription>
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto min-h-0 px-6 py-4">
+        <div className="flex-1 overflow-y-auto min-h-0 px-3">
           {isEmpty && !trashBucket.loading ? (
             <div className="h-full flex flex-col items-center justify-center text-foreground/80 gap-2 min-h-[300px]">
               <Trash2 className="h-12 w-12 opacity-20" />
               <p>Trash is empty</p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-1">
               {trashBucket.items.map((file) => (
                 <TrashFileCard key={file.name} file={file} />
               ))}

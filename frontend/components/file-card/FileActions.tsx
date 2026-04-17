@@ -47,6 +47,7 @@ export function FileActions({
       <Button
         variant="ghost"
         size="icon"
+        title="收藏"
         className="h-10 w-10 text-foreground/80 hover:text-foreground bg-secondary/50 hover:bg-secondary/80 backdrop-blur-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity rounded-xl"
         onClick={(e) => {
           e.stopPropagation();
@@ -68,6 +69,7 @@ export function FileActions({
           <Button
             variant="ghost"
             size="icon"
+            title="更多操作"
             className="h-10 w-10 text-foreground hover:text-foreground bg-secondary/50 hover:bg-secondary/80 backdrop-blur-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity rounded-xl"
             onClick={(e) => e.stopPropagation()}
           >
