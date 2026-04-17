@@ -59,7 +59,7 @@ export function FileImagePreview({
   className,
 }: FileImagePreviewProps) {
   const { forceLoadFiles, addForceLoadFile } = useFileUIStore();
-  const isLoaded = !shouldBlur && (shouldLoad || forceLoadFiles.includes(fileKey));
+  const isLoaded = shouldLoad || forceLoadFiles.includes(fileKey);
 
   const img = isLoaded ? (
     <img
@@ -69,7 +69,7 @@ export function FileImagePreview({
       decoding="async"
       className={cn(
         "w-full h-full object-cover transition-all duration-300",
-        shouldBlur && "blur-xl",
+        shouldBlur ? "blur-xl scale-110" : "blur-0 scale-100",
         !shouldBlur && canPreview && "cursor-zoom-in",
       )}
     />

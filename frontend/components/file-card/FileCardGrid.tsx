@@ -104,7 +104,7 @@ export function FileCardGrid({ file, actions }: FileCardGridProps) {
         {/* File Info Overlay */}
         <div className="absolute bottom-0 left-0 right-0 p-3 bg-linear-to-t from-black/80 via-black/60 to-transparent">
           <div className="flex items-center gap-2 mb-1">
-            <p className="text-sm font-medium text-white truncate">
+            <p className={cn("text-sm font-medium text-white truncate transition-all duration-300", blur && "blur-xs select-none opacity-80")} title={file.metadata?.fileName}>
               {file.metadata?.fileName || file.name}
             </p>
             <div className="flex gap-1 shrink-0">

@@ -3,7 +3,7 @@ import {
   Video,
   FileText,
 } from "lucide-react";
-import { shouldBlur, shouldLoadImage } from "@/lib/utils";
+import { shouldBlur, shouldLoadImage, cn } from "@/lib/utils";
 import { getFileUrl } from "@/lib/api";
 import { FileTag, FileType } from "@shared/types";
 import { FileImagePreview } from "../FileImagePreview";
@@ -68,7 +68,10 @@ export function FileContent({
           alt={fileKey}
           loading="lazy"
           decoding="async"
-          className="w-full h-full object-cover"
+          className={cn(
+            "w-full h-full object-cover transition-all duration-300",
+            blur ? "blur-xl scale-110" : "blur-0 scale-100"
+          )}
         />
       );
     }

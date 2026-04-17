@@ -18,6 +18,7 @@ export function FileCardList({ file, actions }: FileCardListProps) {
   const {
     isSelected,
     fileType,
+    blur,
     isIncompleteUpload,
     showDetail,
     showEdit,
@@ -65,7 +66,7 @@ export function FileCardList({ file, actions }: FileCardListProps) {
 
         {/* File Info */}
         <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-          <p className="text-sm font-medium truncate leading-tight">
+          <p className={cn("text-sm font-medium truncate leading-tight transition-all duration-300", blur && "blur-xs select-none opacity-80")} title={file.metadata?.fileName}>
             {file.metadata?.fileName}
           </p>
           <div className="flex items-center gap-2 text-[11px] text-foreground/50 leading-none">
