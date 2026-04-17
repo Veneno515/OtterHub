@@ -87,7 +87,7 @@ export function FileActions({
             className="text-foreground hover:bg-secondary/50"
           >
             <Eye className={`h-4 w-4 mr-2 ${IconColor}`} />
-            View
+            查看
           </DropdownMenuItem>
 
           {/* 分享 */}
@@ -99,7 +99,7 @@ export function FileActions({
             className="text-foreground hover:bg-secondary/50"
           >
             <Share2 className={`h-4 w-4 mr-2 ${IconColor}`} />
-            Share
+            分享
           </DropdownMenuItem>
 
           {/* 复制链接 */}
@@ -111,7 +111,7 @@ export function FileActions({
             className="text-foreground hover:bg-secondary/50"
           >
             <Link className={`h-4 w-4 mr-2 ${IconColor}`} />
-            Copy Link
+            复制链接
           </DropdownMenuItem>
 
           {/* 编辑 */}
@@ -123,7 +123,7 @@ export function FileActions({
             className="text-foreground hover:bg-secondary/50"
           >
             <Edit className={`h-4 w-4 mr-2 ${IconColor}`} />
-            Edit
+            编辑
           </DropdownMenuItem>
 
           {/* 下载 */}
@@ -135,7 +135,7 @@ export function FileActions({
             className="text-foreground hover:bg-secondary/50"
           >
             <Download className={`h-4 w-4 mr-2 ${IconColor}`} />
-            Download
+            下载
           </DropdownMenuItem>
 
           {/* 详情 */}
@@ -147,7 +147,7 @@ export function FileActions({
             className="text-foreground hover:bg-secondary/50"
           >
             <Info className={`h-4 w-4 mr-2 ${IconColor}`} />
-            Details
+            详情
           </DropdownMenuItem>
 
           {/* 删除 */}
@@ -159,7 +159,7 @@ export function FileActions({
             className="text-red-400 hover:bg-red-500/10"
           >
             <Trash2 className={`h-4 w-4 mr-2 ${IconColor}`} />
-            Delete
+            删除
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

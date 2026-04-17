@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Download, FileIcon, Loader2, Clock, AlertCircle, CalendarClock, Package, Archive, Image, Music, Video, FileText, Eye, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { formatFileSize, formatTime } from '@/lib/utils';
-import { ShareMetaResponse, BundleFileInfo } from '@shared/types';
+import { ShareMetaResponse } from '@shared/types';
 
 const FILE_TYPES = [
   { type: 'image', reg: /\.(jpe?g|png|gif|webp|svg|bmp|ico|avif|heic|heif)$/i },
@@ -57,8 +57,10 @@ function ShareContent() {
   const currentPreviewFile = previewableFiles[currentPreviewIndexInList];
 
   const handlePreviewNav = (step: number) => {
-    const nextIdx = currentPreviewIndexInList + step;
-    if (nextIdx >= 0 && nextIdx < previewableFiles.length) setPreviewIndex(previewableFiles[nextIdx].originalIndex);
+    const len = previewableFiles.length;
+    if (len === 0) return;
+    const nextIdx = (currentPreviewIndexInList + step + len) % len;
+    setPreviewIndex(previewableFiles[nextIdx].originalIndex);
   };
 
   useEffect(() => {
@@ -115,9 +117,11 @@ function ShareContent() {
               {isBundle ? <Package className="h-10 w-10 text-primary" /> : <FileIcon className="h-10 w-10 text-primary" />}
             </div>
             <div className="space-y-1">
-              <CardTitle className="text-xl break-all">{isBundle ? '文件包' : meta?.fileName}</CardTitle>
+              <CardTitle className="text-xl break-all">
+                {isBundle ? (meta?.bundleName || `share-${token?.slice(0, 8)}`) : meta?.fileName}
+              </CardTitle>
               <p className="text-sm text-muted-foreground">
-                {isBundle ? `${meta?.files?.length || 0} 个文件` : formatFileSize(meta?.fileSize || 0)}
+                {isBundle ? `${meta?.files?.length || 0} 个文件 · ${formatFileSize(meta?.totalSize || 0)}` : formatFileSize(meta?.fileSize || 0)}
               </p>
             </div>
           </CardHeader>
@@ -163,13 +167,13 @@ function ShareContent() {
               className="w-full h-12 text-lg font-medium shadow-lg hover:shadow-primary/25 transition-all"
               disabled={isActioning}
               onClick={() => isBundle 
-                ? executeDownload(() => shareApi.getDownloadAllUrl(token!), `share-${token!.slice(0, 8)}.zip`)
+                ? executeDownload(() => shareApi.getDownloadAllUrl(token!), `${meta?.bundleName || `share-${token!.slice(0, 8)}`}.zip`)
                 : executeDownload(() => shareApi.getDownloadUrl(token!), meta?.fileName || 'download')
               }
             >
-              {isActioning ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Downloading...</> 
+              {isActioning ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" />下载中...</> 
                : isBundle ? <><Archive className="mr-2 h-5 w-5" />下载全部 (ZIP)</> 
-               : <><Download className="mr-2 h-5 w-5" />Download File</>}
+               : <><Download className="mr-2 h-5 w-5" />下载文件</>}
             </Button>
           </CardFooter>
         </Card>
@@ -210,30 +214,46 @@ const PreviewModal = ({ file, token, total, currentIndex, onClose, onNav }: any)
   const cat = getFileCategory(file.name);
   const url = shareApi.getDownloadUrl(token, file.key);
 
+  // 核心逻辑：只有真正点击到背景那一层时才触发关闭
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90" onClick={onClose}>
-      <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"><X className="h-6 w-6 text-white" /></button>
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-black/50 text-white text-sm max-w-[80%] truncate">{file.name}</div>
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-16" 
+      onClick={handleBackdropClick} // 绑定到最外层
+    >
+      <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10">
+        <X className="h-6 w-6 text-white" />
+      </button>
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-black/50 text-white text-sm max-w-[80%] truncate">
+        {file.name}
+      </div>
       
       {total > 1 && (
         <>
-          <button onClick={(e) => { e.stopPropagation(); onNav(-1); }} disabled={currentIndex === 0} className="absolute left-4 p-2 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed"><ChevronLeft className="h-8 w-8 text-white" /></button>
-          <button onClick={(e) => { e.stopPropagation(); onNav(1); }} disabled={currentIndex === total - 1} className="absolute right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed"><ChevronRight className="h-8 w-8 text-white" /></button>
+          <button onClick={(e) => { e.stopPropagation(); onNav(-1); }} className="absolute left-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"><ChevronLeft className="h-8 w-8 text-white" /></button>
+          <button onClick={(e) => { e.stopPropagation(); onNav(1); }} className="absolute right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"><ChevronRight className="h-8 w-8 text-white" /></button>
         </>
       )}
       
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/50 text-white text-sm">{currentIndex + 1} / {total}</div>
-      <div className="w-full h-full flex items-center justify-center p-16" onClick={e => e.stopPropagation()}>
-        {cat === 'image' && <img src={url} alt={file.name} className="max-w-full max-h-full object-contain" />}
-        {cat === 'video' && <video src={url} controls autoPlay className="max-w-full max-h-full" />}
-        {cat === 'audio' && (
-          <div className="flex flex-col items-center gap-6">
-            <Music className="h-24 w-24 text-white/50" />
-            <p className="text-white text-lg">{file.name}</p>
-            <audio src={url} controls autoPlay className="w-80" />
-          </div>
-        )}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/50 text-white text-sm">
+        {currentIndex + 1} / {total}
       </div>
+      
+      {/* 移除了原本的 w-full h-full 拦截层，直接依靠外层的 flex 居中 */}
+      {cat === 'image' && <img src={url} alt={file.name} className="max-w-full max-h-full object-contain relative z-10" />}
+      {cat === 'video' && <video src={url} controls autoPlay className="max-w-full max-h-full relative z-10" />}
+      {cat === 'audio' && (
+        <div className="flex flex-col items-center gap-6 relative z-10">
+          <Music className="h-24 w-24 text-white/50" />
+          <p className="text-white text-lg">{file.name}</p>
+          <audio src={url} controls autoPlay className="w-80" />
+        </div>
+      )}
     </div>
   );
 };

@@ -121,11 +121,12 @@ export function FilterDropdown() {
         </div>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-0 overflow-hidden bg-popover border-glass-border shadow-xl text-foreground">
-        {/* 已应用筛选区域 - 仅在有筛选时显示 */}
-        {activeFiltersCount > 0 && (
-          <div className="bg-secondary/30 p-4 border-b border-glass-border">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-medium text-foreground/70 uppercase tracking-wider">已应用筛选</span>
+        <div className="p-4 space-y-5">
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-medium text-foreground/70 uppercase tracking-wider">
+              筛选
+            </h4>
+            {activeFiltersCount > 0 && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -133,61 +134,9 @@ export function FilterDropdown() {
                 className="h-6 px-2 text-[10px] text-foreground/50 hover:text-destructive hover:bg-destructive/10"
               >
                 <X className="h-3 w-3 mr-1" />
-                清空全部
+                清除
               </Button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {/* 收藏状态 */}
-              {filterLiked && (
-                <Badge 
-                  className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors gap-1 pr-1"
-                  onClick={() => setFilterLiked(false)}
-                >
-                  <Heart className="h-3 w-3 fill-current" />
-                  <span>已收藏</span>
-                  <X className="h-2.5 w-2.5 ml-0.5 cursor-pointer opacity-60 hover:opacity-100" />
-                </Badge>
-              )}
-              
-              {/* 标签 */}
-              {filterTags.map(tag => (
-                <Badge 
-                  key={tag}
-                  className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors gap-1 pr-1"
-                  onClick={() => toggleTag(tag)}
-                >
-                  <Tag className="h-3 w-3" />
-                  <span>{tag}</span>
-                  <X className="h-2.5 w-2.5 ml-0.5 cursor-pointer opacity-60 hover:opacity-100" />
-                </Badge>
-              ))}
-
-              {/* 日期范围 */}
-              {(filterDateRange.start || filterDateRange.end) && (
-                <Badge 
-                  className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors gap-1 pr-1"
-                  onClick={() => setFilterDateRange({})}
-                >
-                  <CalendarIcon className="h-3 w-3" />
-                  <span className="text-[10px]">
-                    {selectedRange?.from ? (
-                      selectedRange.to ? (
-                        <>{formatDate(selectedRange.from)} - {formatDate(selectedRange.to)}</>
-                      ) : formatDate(selectedRange.from)
-                    ) : "日期"}
-                  </span>
-                  <X className="h-2.5 w-2.5 ml-0.5 cursor-pointer opacity-60 hover:opacity-100" />
-                </Badge>
-              )}
-            </div>
-          </div>
-        )}
-
-        <div className="p-4 space-y-5">
-          <div className="flex items-center justify-between">
-            <h4 className="text-xs font-medium text-foreground/70 uppercase tracking-wider">
-              {activeFiltersCount > 0 ? "修改筛选" : "添加筛选"}
-            </h4>
+            )}
           </div>
 
           {/* 收藏 */}
@@ -217,7 +166,7 @@ export function FilterDropdown() {
             <div className="space-y-2.5">
               <div className="text-[11px] text-foreground/50 flex items-center gap-1.5 px-0.5">
                 <Tag className="h-3 w-3" />
-                <span>热门标签</span>
+                <span>标签</span>
               </div>
               <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-glass-border">
                 {availableTags.map((tag) => (
@@ -276,13 +225,20 @@ export function FilterDropdown() {
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
-                      variant="outline"
+                      variant={selectedRange?.from ? "default" : "outline"}
                       size="sm"
                       className={cn(
-                        "h-8 text-[11px] bg-transparent border-glass-border hover:border-primary/50",
+                        "h-8 text-[11px]",
+                        selectedRange?.from
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-transparent border-glass-border hover:border-primary/50"
                       )}
                     >
-                      自定义范围
+                      {selectedRange?.from
+                        ? selectedRange.to
+                          ? `${formatDate(selectedRange.from)} - ${formatDate(selectedRange.to)}`
+                          : formatDate(selectedRange.from)
+                        : "自定义范围"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start" side="left">
