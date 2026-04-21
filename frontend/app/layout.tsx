@@ -6,17 +6,25 @@ import { ThemeProvider } from "@/components/ui/theme-provider"
 import "react-photo-view/dist/react-photo-view.css"
 import { APP_DESC_CN, APP_DESC_EN, APP_NAME } from "@/lib/ui-text";
 import { GlobalPreviewLayer } from "@/components/preview/GlobalPreviewLayer"
+import { PwaRegister } from "@/components/pwa/PwaRegister"
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
   viewportFit: "cover",
+  themeColor: "#00cd99",
 }
 
 export const metadata: Metadata = {
   title: `${APP_NAME} - ${APP_DESC_EN}`,
   description: APP_DESC_CN,
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: APP_NAME,
+  },
   icons: {
     icon: [
       {
@@ -50,6 +58,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <PwaRegister />
           {children}
           <GlobalPreviewLayer />
           <Toaster
