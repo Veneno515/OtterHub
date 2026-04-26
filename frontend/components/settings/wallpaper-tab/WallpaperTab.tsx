@@ -23,7 +23,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ApiKeyDialog } from "./ApiKeyDialog";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useFileDataStore } from "@/stores/file";
-import { FileItem, FileTag, FileType, UnifiedWallpaper, WallpaperSourceId } from "@shared/types";
+import {
+  FileItem,
+  FileTag,
+  FileType,
+  UnifiedWallpaper,
+  WallpaperSourceId,
+} from "@shared/types";
 import { useWallpaperSources, useWallpaperList } from "./hooks";
 import { WallpaperGridItem } from "./WallpaperGridItem";
 
@@ -40,8 +46,12 @@ export function WallpaperTab() {
     syncToCloud,
   } = useWallpaperSources();
 
-  const [uploadingIds, setUploadingIds] = useState<Set<string | number>>(new Set());
-  const [uploadedIds, setUploadedIds] = useState<Set<string | number>>(new Set());
+  const [uploadingIds, setUploadingIds] = useState<Set<string | number>>(
+    new Set()
+  );
+  const [uploadedIds, setUploadedIds] = useState<Set<string | number>>(
+    new Set()
+  );
   const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
   const [minPage, setMinPage] = useState(1);
   const [maxPage, setMaxPage] = useState(20);
@@ -65,11 +75,11 @@ export function WallpaperTab() {
     const currentConfig = configs[activeSourceId];
     const newConfig = (activeSource as any).setApiKey(currentConfig, newKey);
     updateConfig(activeSourceId, newConfig);
-    
+
     try {
       await syncToCloud();
       toast.success(`${activeSource.name} API Key 已同步到云端`);
-    } catch (error) {
+    } catch {
       toast.error("同步到云端失败，请稍后重试");
     }
   };
@@ -90,15 +100,19 @@ export function WallpaperTab() {
   const handleUpload = async (e: React.MouseEvent, wp: UnifiedWallpaper) => {
     e.stopPropagation();
     if (!activeSource) return;
-    const config = configs[activeSourceId];
 
     setUploadingIds((prev) => new Set(prev).add(wp.id));
     try {
       const fileName = `${wp.source}_${wp.id}.jpg`;
-      const isNsfw = wp.purity === 'nsfw';
+      const isNsfw = wp.purity === "nsfw";
       const tags = isNsfw ? [FileTag.NSFW] : [];
 
-      const { key, fileSize } = await uploadByUrl(wp.rawUrl, fileName, isNsfw, tags);
+      const { key, fileSize } = await uploadByUrl(
+        wp.rawUrl,
+        fileName,
+        isNsfw,
+        tags
+      );
 
       const fileItem: FileItem = {
         name: key,
@@ -129,7 +143,7 @@ export function WallpaperTab() {
 
   const displayWallpapers = wallpapers.slice(
     (currentPage - 1) * pageSize,
-    currentPage * pageSize,
+    currentPage * pageSize
   );
   const totalPages = Math.ceil(wallpapers.length / pageSize);
 
@@ -167,19 +181,30 @@ export function WallpaperTab() {
             <input
               type="number"
               value={minPage}
-              onChange={(e) => setMinPage(Math.max(1, parseInt(e.target.value) || 1))}
+              onChange={(e) =>
+                setMinPage(Math.max(1, parseInt(e.target.value) || 1))
+              }
               className="w-7 sm:w-8 bg-transparent border-none p-0 text-xs font-bold text-center focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
-            <span className="text-muted-foreground/80 text-[10px] font-bold">-</span>
+            <span className="text-muted-foreground/80 text-[10px] font-bold">
+              -
+            </span>
             <input
               type="number"
               value={maxPage}
-              onChange={(e) => setMaxPage(Math.max(minPage, parseInt(e.target.value) || minPage))}
+              onChange={(e) =>
+                setMaxPage(
+                  Math.max(minPage, parseInt(e.target.value) || minPage)
+                )
+              }
               className="w-7 sm:w-8 bg-transparent border-none p-0 text-xs font-bold text-center focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
           </div>
 
-          <Separator orientation="vertical" className="h-6 mx-0.5 opacity-20 hidden sm:block" />
+          <Separator
+            orientation="vertical"
+            className="h-6 mx-0.5 opacity-20 hidden sm:block"
+          />
 
           <div className="flex items-center gap-1 bg-muted/30 p-1 rounded-xl border border-border/40">
             {activeSource.requiresApiKey && (
@@ -190,7 +215,7 @@ export function WallpaperTab() {
                   "h-8 w-8 rounded-lg transition-all",
                   hasApiKey
                     ? "text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
-                    : "text-amber-500 hover:text-amber-600 hover:bg-amber-500/10",
+                    : "text-amber-500 hover:text-amber-600 hover:bg-amber-500/10"
                 )}
                 onClick={() => setIsApiKeyDialogOpen(true)}
                 title="配置 API Key"
@@ -222,7 +247,11 @@ export function WallpaperTab() {
             className="h-10 w-10 rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 bg-primary hover:bg-primary/90"
             title="随机壁纸"
           >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Dices className="h-5 w-5" />}
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Dices className="h-5 w-5" />
+            )}
           </Button>
         </div>
       </div>
@@ -246,7 +275,9 @@ export function WallpaperTab() {
               {configs[activeSourceId] && (
                 <activeSource.ConfigPanel
                   config={configs[activeSourceId] as any}
-                  onChange={(newConfig: any) => updateConfig(activeSourceId, newConfig)}
+                  onChange={(newConfig: any) =>
+                    updateConfig(activeSourceId, newConfig)
+                  }
                 />
               )}
             </div>
@@ -274,7 +305,9 @@ export function WallpaperTab() {
               <ImageIcon className="h-16 w-16" />
             </div>
             <div className="text-center">
-              <p className="text-lg font-bold text-muted-foreground/40">空空如也...</p>
+              <p className="text-lg font-bold text-muted-foreground/40">
+                空空如也...
+              </p>
             </div>
           </div>
         ) : (
@@ -300,7 +333,9 @@ export function WallpaperTab() {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 rounded-full hover:bg-background/80 transition-all disabled:opacity-20"
-                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(1, prev - 1))
+                    }
                     disabled={currentPage === 1}
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -308,7 +343,8 @@ export function WallpaperTab() {
 
                   <div className="px-3 min-w-[60px] text-center">
                     <span className="text-[10px] font-bold tracking-tighter tabular-nums text-primary/80">
-                      {currentPage} <span className="opacity-30 mx-0.5">/</span> {totalPages}
+                      {currentPage} <span className="opacity-30 mx-0.5">/</span>{" "}
+                      {totalPages}
                     </span>
                   </div>
 
@@ -316,7 +352,9 @@ export function WallpaperTab() {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 rounded-full hover:bg-background/80 transition-all disabled:opacity-20"
-                    onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                    }
                     disabled={currentPage === totalPages}
                   >
                     <ChevronRight className="h-4 w-4" />
@@ -333,7 +371,9 @@ export function WallpaperTab() {
           open={isApiKeyDialogOpen}
           onOpenChange={setIsApiKeyDialogOpen}
           source={activeSource as any}
-          currentApiKey={(activeSource as any).getApiKey(configs[activeSourceId] || {})}
+          currentApiKey={(activeSource as any).getApiKey(
+            configs[activeSourceId] || {}
+          )}
           onSave={handleApiKeySave}
         />
       )}

@@ -2,9 +2,9 @@ name: CI Test
 
 on:
   pull_request:
-    branches: [ master ]
+    branches: [master]
   push:
-    branches: [ master ]
+    branches: ["**"]
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}

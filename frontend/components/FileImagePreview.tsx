@@ -56,7 +56,6 @@ export function FileImagePreview({
   shouldBlur,
   canPreview,
   iconClassName = "h-16 w-16 text-blue-300",
-  className,
 }: FileImagePreviewProps) {
   const { forceLoadFiles, addForceLoadFile } = useFileUIStore();
   const isLoaded = shouldLoad || forceLoadFiles.includes(fileKey);
@@ -70,29 +69,31 @@ export function FileImagePreview({
       className={cn(
         "w-full h-full object-cover transition-all duration-300",
         shouldBlur ? "blur-xl scale-110" : "blur-0 scale-100",
-        !shouldBlur && canPreview && "cursor-zoom-in",
+        !shouldBlur && canPreview && "cursor-zoom-in"
       )}
     />
   ) : (
-    <div 
-      className="flex items-center justify-center w-full h-full cursor-pointer hover:bg-white/5 transition-colors group" 
+    <div
+      className="flex items-center justify-center w-full h-full cursor-pointer hover:bg-white/5 transition-colors group"
       onClick={(e) => {
         e.stopPropagation();
         addForceLoadFile(fileKey);
       }}
       title="点击加载图片"
     >
-      <Image className={cn(iconClassName, "group-hover:opacity-80 transition-opacity")} />
+      <Image
+        className={cn(
+          iconClassName,
+          "group-hover:opacity-80 transition-opacity"
+        )}
+        aria-label="点击加载图片"
+      />
     </div>
   );
 
   // 只有：加载了图片 + 允许预览 + 非模糊状态 才启用 PhotoView
   if (isLoaded && canPreview && !shouldBlur) {
-    return (
-      <PhotoView src={src}>
-        {img}
-      </PhotoView>
-    );
+    return <PhotoView src={src}>{img}</PhotoView>;
   }
 
   return img;

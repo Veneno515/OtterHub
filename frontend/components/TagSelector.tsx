@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Plus, Tag } from "lucide-react";
+import { Plus, Tag } from "lucide-react";
 import { FileTag } from "@shared/types";
 import { cn } from "@/lib/utils";
 import { TAG_CONFIG } from "@/lib/utils";
@@ -27,7 +27,7 @@ export function TagSelector({
 }: TagSelectorProps) {
   // 获取可添加的标签（已添加的不再显示）
   const availableTags = Object.values(FileTag).filter(
-    (tag) => !tags.includes(tag),
+    (tag) => !tags.includes(tag)
   );
 
   // 添加标签
@@ -84,13 +84,13 @@ export function TagSelector({
                         <Tag
                           className={cn(
                             "h-4 w-4",
-                            config?.textColor || "text-foreground/60",
+                            config?.textColor || "text-foreground/60"
                           )}
                         />
                         <span
                           className={cn(
                             "text-foreground",
-                            config?.textColor || "text-foreground/60",
+                            config?.textColor || "text-foreground/60"
                           )}
                         >
                           {config?.label || tag}
@@ -100,7 +100,7 @@ export function TagSelector({
                         className={cn(
                           "text-xs px-2 py-0.5 rounded",
                           config?.bgColor || "bg-secondary/30",
-                          config?.textColor || "text-foreground/60",
+                          config?.textColor || "text-foreground/60"
                         )}
                       >
                         {config?.description || ""}

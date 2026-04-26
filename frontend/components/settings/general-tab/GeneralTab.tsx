@@ -3,20 +3,41 @@
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import {
-  ShieldCheck, Eye, CloudSync, CloudUpload, Info, ShieldAlert, FolderOpen,
-  Trash2, RefreshCw, Download, AlertCircle, Sparkles
+  ShieldCheck,
+  Eye,
+  CloudSync,
+  CloudUpload,
+  Info,
+  ShieldAlert,
+  FolderOpen,
+  Trash2,
+  RefreshCw,
+  Download,
+  AlertCircle,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useGeneralSettingsStoreClient, SettingsSnapshot } from "@/stores/general-store";
+import {
+  useGeneralSettingsStoreClient,
+  SettingsSnapshot,
+} from "@/stores/general-store";
 import { cn } from "@/lib/utils";
 import {
-  loadDirectoryHandle, clearDirectoryHandleCache, pickDownloadDirectoryForFirstTime,
+  loadDirectoryHandle,
+  clearDirectoryHandleCache,
+  pickDownloadDirectoryForFirstTime,
 } from "@/lib/utils/file";
 import { TagSelector } from "@/components/TagSelector";
 import { SafeModeToggle } from "@/components/SafeModeToggle";
@@ -49,11 +70,17 @@ const SettingItem = ({ title, desc, children }: any) => (
 const HintBox = ({ icon: Icon = Info, variant = "default", children }: any) => {
   const styles = {
     default: "bg-muted/30 border-border/20 text-muted-foreground",
-    warning: "bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400",
-    info: "bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400"
+    warning:
+      "bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400",
+    info: "bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400",
   };
   return (
-    <div className={cn("flex items-start gap-1.5 p-1.5 rounded-lg border text-xs leading-relaxed", styles[variant as keyof typeof styles])}>
+    <div
+      className={cn(
+        "flex items-start gap-1.5 p-1.5 rounded-lg border text-xs leading-relaxed",
+        styles[variant as keyof typeof styles]
+      )}
+    >
       <Icon className="h-3.5 w-3.5 mt-0.5 shrink-0 opacity-80" />
       <div>{children}</div>
     </div>
@@ -70,7 +97,136 @@ export function GeneralTab() {
   const [isDirLoading, setIsDirLoading] = useState(false);
   const [supportsFsApi, setSupportsFsApi] = useState(false);
 
-  // SSR 安全处理
+  // 保存打开面板时的设置快照，用于关闭时对比是否变更
+  const settingsSnapshotRef = useRef<SettingsSnapshot | null>(null);
+
+  // 打开设置面板时：仅保存快照，不拉取云端（避免覆盖 Header 的本地修改）
+  useEffect(() => {
+    if (store) {
+      settingsSnapshotRef.current = store.getSettingsSnapshot();
+    }
+  }, [store]);
+
+  // 关闭/离开设置面板时：如有变更，自动同步到云端
+  useEffect(() => {
+    return () => {
+      const snapshot = settingsSnapshotRef.current;
+      if (snapshot && store && store.hasSettingsChanged(snapshot)) {
+        // 静默同步，不阻塞关闭，失败也不提示（下次打开会重试）
+        store.syncSettings().catch(() => {
+          // 静默失败，下次打开时会再次尝试同步
+        });
+      }
+    };
+  }, [store]);
+
+  // 初始化 FsApi & 读取目录
+  useEffect(() => {
+    const isSupported =
+      typeof window !== "undefined" && "showDirectoryPicker" in window;
+    setSupportsFsApi(isSupported);
+    if (isSupported) {
+      loadDirectoryHandle()
+        .then((handle) => setCurrentDir(handle?.name || null))
+        .catch(() => setCurrentDir(null));
+    }
+  }, []);
+
+  // 阈值防抖同步
+  useEffect(() => {
+    if (store) {
+      setLocalThreshold(store.dataSaverThreshold.toString());
+    }
+  }, [store?.dataSaverThreshold]);
+  useEffect(() => {
+    if (!store) return;
+    const threshold = parseFloat(localThreshold);
+    if (
+      isNaN(threshold) ||
+      threshold < 0 ||
+      threshold === store.dataSaverThreshold
+    )
+      return;
+    const timer = setTimeout(() => store.setDataSaverThreshold(threshold), 500);
+    return () => clearTimeout(timer);
+  }, [
+    localThreshold,
+    store?.dataSaverThreshold,
+    store?.setDataSaverThreshold,
+    store,
+  ]);
+
+  // 异步操作工厂函数
+  const withLoading =
+    (
+      action: () => Promise<any>,
+      setLoader: (val: boolean) => void,
+      successMsg?: string,
+      errorMsg?: string
+    ) =>
+    async () => {
+      setLoader(true);
+      try {
+        const res = await action();
+        // if (successMsg) toast.success(successMsg);
+        return res;
+      } catch {
+        if (errorMsg) toast.error(errorMsg);
+      } finally {
+        setLoader(false);
+      }
+    };
+
+  const handleChangeDirectory = withLoading(
+    async () => {
+      const result = await pickDownloadDirectoryForFirstTime();
+      if (result) {
+        setCurrentDir(result.dirName);
+        toast.success(`已切换到: ${result.dirName}`);
+      }
+    },
+    setIsDirLoading,
+    undefined,
+    "更换失败"
+  );
+
+  const handleClearDirectory = withLoading(
+    async () => {
+      await clearDirectoryHandleCache();
+      setCurrentDir(null);
+    },
+    setIsDirLoading,
+    "已清除，下次下载需重新选择目录",
+    "清除失败"
+  );
+
+  // 手动同步到云端，成功后更新快照避免退出时重复触发
+  const handleManualSync = withLoading(
+    async () => {
+      if (!store) return;
+      await store.syncSettings();
+      // 成功后更新快照，避免退出时重复触发自动同步
+      settingsSnapshotRef.current = store.getSettingsSnapshot();
+    },
+    setIsUploading,
+    "保存成功",
+    "保存失败"
+  );
+
+  // 从云端恢复，成功后更新快照
+  const handleFetchFromCloud = withLoading(
+    async () => {
+      if (!store) return;
+      await store.fetchSettings();
+      // 恢复成功后更新快照，避免退出时误触发同步
+      settingsSnapshotRef.current = store.getSettingsSnapshot();
+    },
+    setIsSyncing,
+    "恢复成功",
+    "恢复失败"
+  );
+
+  // SSR 安全处理 - 放在所有 hooks 之后
   if (!store) {
     return (
       <div className="flex flex-col h-full items-center justify-center text-muted-foreground">
@@ -79,103 +235,38 @@ export function GeneralTab() {
     );
   }
 
-  // 保存打开面板时的设置快照，用于关闭时对比是否变更
-  const settingsSnapshotRef = useRef<SettingsSnapshot | null>(null);
-
-  // 打开设置面板时：仅保存快照，不拉取云端（避免覆盖 Header 的本地修改）
-  useEffect(() => {
-    settingsSnapshotRef.current = store.getSettingsSnapshot();
-  }, []);
-
-  // 关闭/离开设置面板时：如有变更，自动同步到云端
-  useEffect(() => {
-    return () => {
-      const snapshot = settingsSnapshotRef.current;
-      if (snapshot && store.hasSettingsChanged(snapshot)) {
-        // 静默同步，不阻塞关闭，失败也不提示（下次打开会重试）
-        store.syncSettings().catch(() => {
-          // 静默失败，下次打开时会再次尝试同步
-        });
-      }
-    };
-  }, []);
-
-  // 初始化 FsApi & 读取目录
-  useEffect(() => {
-    const isSupported = typeof window !== "undefined" && "showDirectoryPicker" in window;
-    setSupportsFsApi(isSupported);
-    if (isSupported) {
-      loadDirectoryHandle().then(handle => setCurrentDir(handle?.name || null)).catch(() => setCurrentDir(null));
-    }
-  }, []);
-
-  // 阈值防抖同步
-  useEffect(() => {
-    setLocalThreshold(store.dataSaverThreshold.toString());
-  }, [store.dataSaverThreshold]);
-  useEffect(() => {
-    const threshold = parseFloat(localThreshold);
-    if (isNaN(threshold) || threshold < 0 || threshold === store.dataSaverThreshold) return;
-    const timer = setTimeout(() => store.setDataSaverThreshold(threshold), 500);
-    return () => clearTimeout(timer);
-  }, [localThreshold, store.dataSaverThreshold, store.setDataSaverThreshold]);
-
-  // 异步操作工厂函数
-  const withLoading = (action: () => Promise<any>, setLoader: (val: boolean) => void, successMsg?: string, errorMsg?: string) => async () => {
-    setLoader(true);
-    try {
-      const res = await action();
-      // if (successMsg) toast.success(successMsg);
-      return res;
-    } catch {
-      if (errorMsg) toast.error(errorMsg);
-    } finally {
-      setLoader(false);
-    }
-  };
-
-  const handleChangeDirectory = withLoading(async () => {
-    const result = await pickDownloadDirectoryForFirstTime();
-    if (result) {
-      setCurrentDir(result.dirName);
-      toast.success(`已切换到: ${result.dirName}`);
-    }
-  }, setIsDirLoading, undefined, "更换失败");
-
-  const handleClearDirectory = withLoading(async () => {
-    await clearDirectoryHandleCache();
-    setCurrentDir(null);
-  }, setIsDirLoading, "已清除，下次下载需重新选择目录", "清除失败");
-
-  // 手动同步到云端，成功后更新快照避免退出时重复触发
-  const handleManualSync = withLoading(async () => {
-    await store.syncSettings();
-    // 成功后更新快照，避免退出时重复触发自动同步
-    settingsSnapshotRef.current = store.getSettingsSnapshot();
-  }, setIsUploading, "保存成功", "保存失败");
-
-  // 从云端恢复，成功后更新快照
-  const handleFetchFromCloud = withLoading(async () => {
-    await store.fetchSettings();
-    // 恢复成功后更新快照，避免退出时误触发同步
-    settingsSnapshotRef.current = store.getSettingsSnapshot();
-  }, setIsSyncing, "恢复成功", "恢复失败");
-
   return (
     <div className="flex flex-col h-full overflow-y-auto custom-scrollbar space-y-6 pr-2">
       {/* 头部区域 */}
       <div className="flex items-center justify-between px-1">
         <div>
           <h2 className="text-xl font-bold tracking-tight">常规设置</h2>
-          <p className="text-sm text-muted-foreground">更改自动保存，可手动同步到云端</p>
+          <p className="text-sm text-muted-foreground">
+            更改自动保存，可手动同步到云端
+          </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleFetchFromCloud} disabled={isSyncing} className="rounded-xl h-9">
-            <CloudSync className={cn("h-4 w-4 mr-2", isSyncing && "animate-spin")} />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleFetchFromCloud}
+            disabled={isSyncing}
+            className="rounded-xl h-9"
+          >
+            <CloudSync
+              className={cn("h-4 w-4 mr-2", isSyncing && "animate-spin")}
+            />
             从云端恢复
           </Button>
-          <Button size="sm" onClick={handleManualSync} disabled={isUploading} className="rounded-xl h-9 shadow-sm">
-            <CloudUpload className={cn("h-4 w-4 mr-2", isUploading && "animate-spin")} />
+          <Button
+            size="sm"
+            onClick={handleManualSync}
+            disabled={isUploading}
+            className="rounded-xl h-9 shadow-sm"
+          >
+            <CloudUpload
+              className={cn("h-4 w-4 mr-2", isUploading && "animate-spin")}
+            />
             保存到云端
           </Button>
         </div>
@@ -220,10 +311,17 @@ export function GeneralTab() {
         </SettingCard>
 
         {/* 2. 上传设置 */}
-        <SettingCard icon={ShieldCheck} iconColor="text-emerald-500" title="上传设置">
+        <SettingCard
+          icon={ShieldCheck}
+          iconColor="text-emerald-500"
+          title="上传设置"
+        >
           <div className="flex flex-col space-y-4">
             <SettingItem title="NSFW 内容检测" desc="上传前本地检测敏感内容">
-              <Switch checked={store.nsfwDetection} onCheckedChange={store.setNsfwDetection} />
+              <Switch
+                checked={store.nsfwDetection}
+                onCheckedChange={store.setNsfwDetection}
+              />
             </SettingItem>
             {!store.nsfwDetection && (
               <HintBox icon={ShieldAlert} variant="warning">
@@ -232,7 +330,10 @@ export function GeneralTab() {
             )}
 
             <SettingItem title="AI 智能分析" desc="上传后智能识别生成描述">
-              <Switch checked={store.enableImageAnalysis} onCheckedChange={store.setEnableImageAnalysis} />
+              <Switch
+                checked={store.enableImageAnalysis}
+                onCheckedChange={store.setEnableImageAnalysis}
+              />
             </SettingItem>
             {!store.enableImageAnalysis && (
               <HintBox icon={Sparkles} variant="info">
@@ -241,35 +342,65 @@ export function GeneralTab() {
             )}
 
             <SettingItem title="默认上传标签" desc="上传时自动添加的标签">
-              <TagSelector tags={store.defaultUploadTags} onChange={store.setDefaultUploadTags} placeholder="选择默认标签..." />
+              <TagSelector
+                tags={store.defaultUploadTags}
+                onChange={store.setDefaultUploadTags}
+                placeholder="选择默认标签..."
+              />
             </SettingItem>
           </div>
         </SettingCard>
 
         {/* 4. 下载管理 */}
         {supportsFsApi ? (
-          <SettingCard icon={Download} iconColor="text-orange-500" title="下载管理">
+          <SettingCard
+            icon={Download}
+            iconColor="text-orange-500"
+            title="下载管理"
+          >
             <div className="flex items-center justify-between p-4 rounded-lg bg-background/50 border border-border/20">
               <div className="flex items-center gap-3">
                 <FolderOpen className="h-5 w-5 text-blue-500" />
                 <div>
                   <p className="font-medium text-sm">批量下载目录</p>
-                  <p className="text-xs text-muted-foreground">{currentDir || "未设置"}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {currentDir || "未设置"}
+                  </p>
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={handleChangeDirectory} disabled={isDirLoading} className="h-9">
-                  <RefreshCw className={cn("h-4 w-4 mr-2", isDirLoading && "animate-spin")} />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleChangeDirectory}
+                  disabled={isDirLoading}
+                  className="h-9"
+                >
+                  <RefreshCw
+                    className={cn(
+                      "h-4 w-4 mr-2",
+                      isDirLoading && "animate-spin"
+                    )}
+                  />
                   更换目录
                 </Button>
                 {currentDir && (
-                  <Button variant="ghost" size="sm" onClick={handleClearDirectory} className="h-9" title="清除目录">
-                      <Trash2 className="h-4 w-4" />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleClearDirectory}
+                    className="h-9"
+                    title="清除目录"
+                  >
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 )}
               </div>
             </div>
-            <HintBox>首次批量下载需选择目录。建议提前创建 OtterHub 文件夹。目录授权失效时会重新提示。</HintBox>
+            <HintBox>
+              首次批量下载需选择目录。建议提前创建 OtterHub
+              文件夹。目录授权失效时会重新提示。
+            </HintBox>
           </SettingCard>
         ) : (
           <Alert className="border-yellow-500/50 bg-yellow-500/10">

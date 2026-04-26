@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Loader2, Share2, Info, Copy } from "lucide-react";
@@ -45,17 +44,17 @@ export function BatchShareDialog({
   const [shareLink, setShareLink] = useState<string | null>(null);
 
   // 表单状态
-  const [expireIn, setExpireIn] = useState<string>('3600');
-  const [customDays, setCustomDays] = useState<string>('1');
-  const [bundleName, setBundleName] = useState<string>('');
+  const [expireIn, setExpireIn] = useState<string>("3600");
+  const [customDays, setCustomDays] = useState<string>("1");
+  const [bundleName, setBundleName] = useState<string>("");
 
   // 对话框打开时重置状态
   useEffect(() => {
     if (open) {
       setShareLink(null);
-      setExpireIn('3600');
-      setCustomDays('1');
-      setBundleName('');
+      setExpireIn("3600");
+      setCustomDays("1");
+      setBundleName("");
     }
   }, [open]);
 
@@ -65,31 +64,35 @@ export function BatchShareDialog({
     try {
       // 计算过期秒数
       let seconds: number | undefined;
-      if (expireIn === 'custom') {
+      if (expireIn === "custom") {
         const days = parseInt(customDays);
         if (isNaN(days) || days < 1 || days > 365) {
-          toast.error('请输入有效的天数 (1-365)');
+          toast.error("请输入有效的天数 (1-365)");
           setIsSubmitting(false);
           return;
         }
         seconds = days * 86400;
       } else {
-        seconds = expireIn === '-1' ? undefined : parseInt(expireIn);
+        seconds = expireIn === "-1" ? undefined : parseInt(expireIn);
       }
 
       const data = await shareApi.create({
-        type: isSingleFile ? 'single' : 'bundle',
+        type: isSingleFile ? "single" : "bundle",
         fileKey: isSingleFile ? files[0].name : undefined,
-        fileKeys: isSingleFile ? undefined : files.map(f => f.name),
-        bundleName: isSingleFile ? undefined : (bundleName.trim() || undefined),
+        fileKeys: isSingleFile ? undefined : files.map((f) => f.name),
+        bundleName: isSingleFile ? undefined : bundleName.trim() || undefined,
         expireIn: seconds,
       });
 
       const url = `${window.location.origin}/s?k=${data.token}`;
       setShareLink(url);
-      toast.success(isSingleFile ? '成功创建分享链接' : `成功创建打包分享链接（${files.length} 个文件）`);
+      toast.success(
+        isSingleFile
+          ? "成功创建分享链接"
+          : `成功创建打包分享链接（${files.length} 个文件）`
+      );
     } catch (error) {
-      toast.error('创建分享链接失败');
+      toast.error("创建分享链接失败");
       console.error(error);
     } finally {
       setIsSubmitting(false);
@@ -99,15 +102,15 @@ export function BatchShareDialog({
   const handleCopy = () => {
     if (shareLink) {
       navigator.clipboard.writeText(shareLink);
-      toast.success('链接已复制到剪贴板');
+      toast.success("链接已复制到剪贴板");
     }
   };
 
   const handleReset = () => {
     setShareLink(null);
-    setExpireIn('3600');
-    setCustomDays('1');
-    setBundleName('');
+    setExpireIn("3600");
+    setCustomDays("1");
+    setBundleName("");
   };
 
   const handleClose = (val: boolean) => {
@@ -123,10 +126,12 @@ export function BatchShareDialog({
         <DialogHeader>
           <DialogTitle className="text-foreground flex items-center gap-2">
             <Share2 className="h-5 w-5 text-primary" />
-            {isSingleFile ? '分享文件' : '打包分享'}
+            {isSingleFile ? "分享文件" : "打包分享"}
           </DialogTitle>
           <DialogDescription>
-            {isSingleFile ? '为选中的文件创建分享链接' : '将选中的文件打包为一个分享链接'}
+            {isSingleFile
+              ? "为选中的文件创建分享链接"
+              : "将选中的文件打包为一个分享链接"}
           </DialogDescription>
         </DialogHeader>
 
@@ -137,13 +142,18 @@ export function BatchShareDialog({
               <p className="text-sm text-foreground/60 flex items-center gap-2">
                 <Info className="h-4 w-4 text-primary shrink-0" />
                 {isSingleFile ? (
-                  <span className="truncate block" title={files[0]?.metadata?.fileName || files[0]?.name}>
+                  <span
+                    className="truncate block"
+                    title={files[0]?.metadata?.fileName || files[0]?.name}
+                  >
                     {files[0]?.metadata?.fileName || files[0]?.name}
                   </span>
                 ) : (
                   <>
-                    已选中{' '}
-                    <span className="font-bold text-primary">{files.length}</span>{' '}
+                    已选中{" "}
+                    <span className="font-bold text-primary">
+                      {files.length}
+                    </span>{" "}
                     个文件
                   </>
                 )}
@@ -169,8 +179,15 @@ export function BatchShareDialog({
             {/* 过期时间选择 */}
             <div className="grid gap-2">
               <Label htmlFor="expire">过期时间</Label>
-              <Select value={expireIn} onValueChange={setExpireIn} disabled={isSubmitting}>
-                <SelectTrigger id="expire" className="bg-secondary/30 border-glass-border text-foreground">
+              <Select
+                value={expireIn}
+                onValueChange={setExpireIn}
+                disabled={isSubmitting}
+              >
+                <SelectTrigger
+                  id="expire"
+                  className="bg-secondary/30 border-glass-border text-foreground"
+                >
                   <SelectValue placeholder="选择过期时间" />
                 </SelectTrigger>
                 <SelectContent>
@@ -184,7 +201,7 @@ export function BatchShareDialog({
             </div>
 
             {/* 自定义天数 */}
-            {expireIn === 'custom' && (
+            {expireIn === "custom" && (
               <div className="grid gap-2">
                 <Label htmlFor="custom-days">天数（最大 365）</Label>
                 <Input
@@ -195,14 +212,14 @@ export function BatchShareDialog({
                   value={customDays}
                   onChange={(e) => {
                     const val = e.target.value;
-                    if (val === '') {
-                      setCustomDays('');
+                    if (val === "") {
+                      setCustomDays("");
                       return;
                     }
                     const num = parseInt(val);
                     if (!isNaN(num)) {
-                      if (num > 365) setCustomDays('365');
-                      else if (num < 1) setCustomDays('1');
+                      if (num > 365) setCustomDays("365");
+                      else if (num < 1) setCustomDays("1");
                       else setCustomDays(val);
                     }
                   }}
@@ -216,8 +233,15 @@ export function BatchShareDialog({
         ) : (
           <div className="flex items-center space-x-2 py-4">
             <div className="grid flex-1 gap-2">
-              <Label htmlFor="link" className="sr-only">链接</Label>
-              <Input id="link" value={shareLink} readOnly className="bg-secondary/30 border-glass-border text-foreground" />
+              <Label htmlFor="link" className="sr-only">
+                链接
+              </Label>
+              <Input
+                id="link"
+                value={shareLink}
+                readOnly
+                className="bg-secondary/30 border-glass-border text-foreground"
+              />
             </div>
             <Button size="sm" className="px-3" onClick={handleCopy}>
               <span className="sr-only">复制</span>
@@ -242,16 +266,25 @@ export function BatchShareDialog({
                 disabled={isSubmitting}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground"
               >
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isSubmitting && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 创建分享链接
               </Button>
             </div>
           ) : (
             <div className="flex w-full justify-end gap-2">
-              <Button variant="secondary" onClick={handleReset} className="border-glass-border text-foreground hover:bg-secondary/50">
+              <Button
+                variant="secondary"
+                onClick={handleReset}
+                className="border-glass-border text-foreground hover:bg-secondary/50"
+              >
                 再次创建
               </Button>
-              <Button onClick={() => handleClose(false)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Button
+                onClick={() => handleClose(false)}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              >
                 完成
               </Button>
             </div>

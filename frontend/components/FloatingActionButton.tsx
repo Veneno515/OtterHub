@@ -19,12 +19,12 @@ export function FloatingActionButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [isTrashOpen, setIsTrashOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  
+
   // Use store for persistence
   const { fabPosition, setFabPosition } = useFileUIStore();
-  const [position, setPosition] = useState(fabPosition); 
+  const [position, setPosition] = useState(fabPosition);
   const [isDragging, setIsDragging] = useState(false);
-  
+
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef({ isDragging: false, startX: 0, startY: 0 });
@@ -37,7 +37,10 @@ export function FloatingActionButton() {
   // 点击外部关闭
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -59,22 +62,25 @@ export function FloatingActionButton() {
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (isOpen || e.buttons === 0) return;
-    
+
     const { startX, startY } = dragRef.current;
     const deltaX = startX - e.clientX;
     const deltaY = startY - e.clientY;
 
     // 移动超过 5px 才判定为拖拽，防止误触
-    if (!dragRef.current.isDragging && (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5)) {
+    if (
+      !dragRef.current.isDragging &&
+      (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5)
+    ) {
       dragRef.current.isDragging = true;
       setIsDragging(true);
     }
 
     if (dragRef.current.isDragging) {
-      setPosition(prev => {
+      setPosition((prev) => {
         const newPos = {
           x: Math.max(16, Math.min(window.innerWidth - 72, prev.x + deltaX)),
-          y: Math.max(16, Math.min(window.innerHeight - 72, prev.y + deltaY))
+          y: Math.max(16, Math.min(window.innerHeight - 72, prev.y + deltaY)),
         };
         return newPos;
       });
@@ -112,7 +118,8 @@ export function FloatingActionButton() {
       icon: <LogOut className="h-5 w-5" />,
       label: "安全退出",
       onClick: handleLogout,
-      className: "bg-destructive/90 text-destructive-foreground hover:bg-destructive shadow-destructive/20",
+      className:
+        "bg-destructive/90 text-destructive-foreground hover:bg-destructive shadow-destructive/20",
     },
     {
       id: "settings",
@@ -126,14 +133,15 @@ export function FloatingActionButton() {
       icon: <Trash2 className="h-5 w-5" />,
       label: "回收站",
       onClick: () => setIsTrashOpen(true),
-      className: "bg-indigo-400/90 text-white hover:bg-indigo-500 shadow-indigo-400/20",
+      className:
+        "bg-indigo-400/90 text-white hover:bg-indigo-500 shadow-indigo-400/20",
     },
   ];
 
   return (
     <>
-      <div 
-        className="fixed z-50 select-none" 
+      <div
+        className="fixed z-50 select-none"
         ref={containerRef}
         style={{
           right: `${position.x}px`,
@@ -143,7 +151,7 @@ export function FloatingActionButton() {
       >
         {/* 遮罩层：开启时点击背景关闭 */}
         {isOpen && (
-          <div 
+          <div
             className="fixed inset-0 bg-background/40 backdrop-blur-sm z-[-1] animate-in fade-in duration-300"
             onClick={() => setIsOpen(false)}
           />
@@ -155,9 +163,9 @@ export function FloatingActionButton() {
             // 计算弧形位置 (180度到270度，即从左侧到上方)
             const radius = 80;
             const totalActions = actions.length;
-            const angle = 180 + (index * (90 / (totalActions - 1)));
+            const angle = 180 + index * (90 / (totalActions - 1));
             const radian = (angle * Math.PI) / 180;
-            
+
             const x = Math.cos(radian) * radius;
             const y = Math.sin(radian) * radius;
 
@@ -166,15 +174,15 @@ export function FloatingActionButton() {
                 key={action.id}
                 className={cn(
                   "absolute transition-all duration-500 ease-out-back",
-                  isOpen 
-                    ? "opacity-100 scale-100 pointer-events-auto" 
+                  isOpen
+                    ? "opacity-100 scale-100 pointer-events-auto"
                     : "opacity-0 scale-0 pointer-events-none"
                 )}
                 style={{
-                  transform: isOpen 
-                    ? `translate(${x}px, ${y}px)` 
+                  transform: isOpen
+                    ? `translate(${x}px, ${y}px)`
                     : "translate(0, 0)",
-                  transitionDelay: `${index * 30}ms`
+                  transitionDelay: `${index * 30}ms`,
                 }}
               >
                 <div className="group relative">
@@ -182,10 +190,10 @@ export function FloatingActionButton() {
                   <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg bg-foreground/90 text-background text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-lg backdrop-blur-md">
                     {action.label}
                   </span>
-                  
+
                   <Button
                     size="icon"
-                    onClick={(e) => {
+                    onClick={() => {
                       if (action.onClick) action.onClick();
                       setIsOpen(false);
                     }}
@@ -212,8 +220,8 @@ export function FloatingActionButton() {
             }}
             className={cn(
               "h-13 w-13 rounded-2xl shadow-xl transition-all duration-500 border-none z-10 cursor-move",
-              isOpen 
-                ? "bg-primary/90 text-background rotate-45 scale-90 shadow-foreground/10" 
+              isOpen
+                ? "bg-primary/90 text-background rotate-45 scale-90 shadow-foreground/10"
                 : "bg-primary/70 text-primary-foreground hover:scale-105 shadow-primary/30",
               isDragging && "scale-110 shadow-2xl ring-4 ring-primary/20"
             )}

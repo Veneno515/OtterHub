@@ -15,9 +15,10 @@ interface MasonryImageCardProps {
 }
 
 export function MasonryImageCard({ file }: MasonryImageCardProps) {
-  const { safeMode, imageLoadMode, dataSaverThreshold} = useGeneralSettingsStore()
+  const { safeMode, imageLoadMode, dataSaverThreshold } =
+    useGeneralSettingsStore();
   const { forceLoadFiles, addForceLoadFile } = useFileUIStore();
-  
+
   const blur = shouldBlur({ safeMode, tags: file.metadata?.tags ?? [] });
   const shouldLoad = shouldLoadImage({
     fileType: FileType.Image,
@@ -25,7 +26,7 @@ export function MasonryImageCard({ file }: MasonryImageCardProps) {
     fileSize: file.metadata?.fileSize ?? 0,
     threshold: dataSaverThreshold * 1024 * 1024,
   });
-  
+
   const load = shouldLoad || forceLoadFiles.includes(file.name);
 
   const imageUrl = getFileUrl(file.name);
@@ -44,14 +45,14 @@ export function MasonryImageCard({ file }: MasonryImageCardProps) {
       )}
     />
   ) : (
-    <div 
+    <div
       className="flex flex-col items-center justify-center w-full py-12 bg-secondary/10 text-muted-foreground gap-2 cursor-pointer hover:bg-secondary/20 transition-colors"
       onClick={(e) => {
         e.stopPropagation();
         addForceLoadFile(file.name);
       }}
     >
-      <Image className="w-8 h-8 opacity-50" />
+      <Image className="w-8 h-8 opacity-50" aria-label="点击加载图片" />
       <span className="text-xs opacity-50">点击加载</span>
     </div>
   );
