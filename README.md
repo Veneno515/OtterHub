@@ -22,7 +22,7 @@
 
 现有基于 **Cloudflare + Telegram** 的文件存储方案，例如：
 
-- [Telegraph-Image](https://github.com/cf-pages/Telegraph-Image) 
+- [Telegraph-Image](https://github.com/cf-pages/Telegraph-Image)
 - [CloudFlare-ImgBed](https://github.com/MarSeventh/CloudFlare-ImgBed)
 
 它们都很优秀，但要么偏向**图床与轻量分享**，要么为了通用性引入了**较高的复杂度**，并不完全适合**长期自用的私人云盘**。
@@ -41,8 +41,7 @@ OtterHub 是一个 **为个人使用场景定制** 的私人云盘方案：
 
 它不追求"什么都支持"，而是专注于**刚好够用、稳定、好维护**。
 
-
->  [!IMPORTANT]
+> [!IMPORTANT]
 > 体验站点：[OtterHub Demo](https://otterhub-demo.pages.dev/)
 >
 > 账号：`OtterHub` | 密码：`123456`
@@ -50,8 +49,6 @@ OtterHub 是一个 **为个人使用场景定制** 的私人云盘方案：
 > 限制：演示站的默认文件不可删，仅支持上传 ≤20MB 文件（1 小时自动清理）
 
 ![网站截图](public/website-screenshot.png)
-
-
 
 ## ✨ 核心能力
 
@@ -74,7 +71,6 @@ OtterHub 是一个 **为个人使用场景定制** 的私人云盘方案：
 - **基础管理功能**：批量下载 / 删除，搜索 / 收藏 / 排序 / 标签
 - **AI 图片分析**：上传图片后自动生成简要描述，便于图片检索（需配置 Workers AI binding）；Telegram 图片无论走 `sendPhoto` 还是 `sendDocument`，都会优先复用较小预览图做分析，超大原图会安全跳过
 
-
 ---
 
 ## 🚀 快速开始
@@ -88,17 +84,19 @@ OtterHub 是一个 **为个人使用场景定制** 的私人云盘方案：
 ### 本地开发
 
 1. **安装依赖**
+
    ```bash
    # 在根目录运行，自动安装所有 Workspaces 依赖
    npm install
    ```
 
 2. **启动项目**
+
    ```bash
    npm run dev
    ```
-> 第一次启动需要构建前端 `npm run build`（生成 `frontend/out` 供 Wrangler Pages Dev 使用），后续启动直接 `npm run dev` 即可。
 
+   > 第一次启动需要构建前端 `npm run build`（生成 `frontend/out` 供 Wrangler Pages Dev 使用），后续启动直接 `npm run dev` 即可。
 
 3. **访问网站**
    - 前端：`http://localhost:3000`
@@ -107,6 +105,10 @@ OtterHub 是一个 **为个人使用场景定制** 的私人云盘方案：
 > [!TIP]
 > 开发环境下密码为`123456`，且采用本地 R2 存储，可以直接上传文件，方便调试。
 > 修改 functions 代码后，可运行 `npm run ci-test` 快速测试文件上传和下载功能是否正常。
+
+### 提交前检查
+
+项目使用 Husky + lint-staged 管理 pre-commit hook。提交时会自动对 staged 文件运行 Prettier，并执行 `npm run typecheck`。
 
 ---
 
@@ -154,6 +156,7 @@ API_TOKEN=your_api_token        # (可选) 用于 API 调用的 Token
 ## 🔧 技术原理
 
 ### 文件上传
+
 > 以大文件分片上传流程为例
 
 1. **初始化上传**
@@ -162,13 +165,11 @@ API_TOKEN=your_api_token        # (可选) 用于 API 调用的 Token
    - 后端创建最终 KV，返回唯一文件 key
 
 2. **分片上传**
-
    - 前端将文件分片（每片 ≤ 20MB）
    - 携带 key 逐个发送 `POST /upload/chunk`
    - 后端将分片暂存到临时 KV（TTL = 1 小时，value ≤ 25MB）
 
 3. **异步上传到 Telegram**
-
    - 使用 `waitUntil` 异步上传分片到 Telegram
    - 上传成功后获取 file_id
 
@@ -178,15 +179,14 @@ API_TOKEN=your_api_token        # (可选) 用于 API 调用的 Token
    - 删除临时 KV
 
 ### 文件下载
+
 > 以大文件流式获取流程为例
 
 1. **读取元数据**
-
    - 从 KV 读取文件元数据和分片信息
    - 解析 chunks 数组中的 file_id
 
 2. **流式拉取**
-
    - 从 Telegram API 流式拉取所有分片
    - 支持 HTTP Range 请求
    - 边拉取边返回给客户端
@@ -196,6 +196,7 @@ API_TOKEN=your_api_token        # (可选) 用于 API 调用的 Token
    - 可指定下载指定字节范围
 
 ### 数据存储结构
+
 > 以 30MB 文件为例
 
 #### KV Key + Metadata 结构
@@ -252,6 +253,7 @@ API_TOKEN=your_api_token        # (可选) 用于 API 调用的 Token
 在分片尚未全部上传完成前，文件可能暂时显示不完整。
 
 通常只需 **稍等片刻并刷新页面** 即可正常显示。
+
 </details>
 
 <details>
@@ -265,6 +267,7 @@ API_TOKEN=your_api_token        # (可选) 用于 API 调用的 Token
 - 下载时按顺序流式拉取并合并
 
 👉 当前最大支持 **1GB 文件（50 × 20MB）**。
+
 </details>
 
 <details>
@@ -289,6 +292,7 @@ API_TOKEN=your_api_token        # (可选) 用于 API 调用的 Token
 3. 保存返回的 Token
 
 **Chat ID**
+
 - 搜索 `@userinfobot` 并发送任意消息
 - 或访问：
   `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates`

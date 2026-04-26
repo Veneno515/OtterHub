@@ -14,11 +14,15 @@
     "build": "npm run build --prefix frontend",
     "lint": "npm run lint --prefix frontend",
     "typecheck": "npm run typecheck --prefix frontend",
-    "ci-test": "concurrently -k -s first \"npm run dev:backend\" \"wait-on http://localhost:8080 && mocha --exit\""
+    "ci-test": "concurrently -k -s first \"npm run dev:backend\" \"wait-on http://localhost:8080 && mocha --exit\"",
+    "prepare": "husky"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "mocha": "^10.6.0",
+    "prettier": "^3.8.3",
     "wait-on": "^7.2.0",
     "wrangler": "^4.24.0"
   },
