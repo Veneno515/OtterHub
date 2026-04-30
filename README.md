@@ -105,7 +105,6 @@ OtterHub 是一个 **为个人使用场景定制** 的私人云盘方案：
 
 > [!TIP]
 > 开发环境下密码为`123456`，且采用本地 R2 存储，可以直接上传文件，方便调试。
-> 修改 functions 代码后，可运行 `npm run ci-test` 快速测试文件上传和下载功能是否正常。
 
 ### 提交前检查
 
@@ -174,11 +173,8 @@ curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook" \
 curl "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getWebhookInfo"
 ```
 
-**使用说明**
-
-- 频道 / 群内发送 **≤20MB** 的图片或文件后，OtterHub 会直接注册 Telegram `file_id`，不会重新下载再上传
-- 超过 20MB 的文件请使用网页上传，网页上传会自动分片
-- 如需关闭 Bot 回复直链功能，将 `TG_UPLOAD_NOTIFY` 设为 `false`
+> [!NOTE]
+> **仅支持 ≤20MB 文件上传**，超过 20MB 的文件请使用 OtterHub 网页端上传以支持分片上传。如需关闭 Bot 回复直链功能，将 `TG_UPLOAD_NOTIFY` 设为 `false`。
 
 </details>
 

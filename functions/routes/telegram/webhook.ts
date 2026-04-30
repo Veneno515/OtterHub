@@ -69,28 +69,8 @@ telegramWebhookRoutes.post("/webhook", async (c) => {
     chatId && shouldNotifyTelegramUpload(c.env.TG_UPLOAD_NOTIFY);
 
   if (media.fileSize > MAX_CHUNK_SIZE) {
-    if (shouldNotify) {
-      const noticeResult = await sendTelegramUploadNotice(c.env.TG_BOT_TOKEN, {
-        chatId,
-        replyToMessageId: message.message_id,
-        directLink,
-        fileId: media.fileId,
-        messageId: media.messageId || message.message_id,
-        fileName: media.fileName,
-        fileSize: media.fileSize,
-        text: `文件超过 20MB，无法通过 Telegram 频道导入。\n请在 OtterHub 网页端上传，系统会自动分片。\n文件名：${media.fileName}`,
-      });
-
-      if (!noticeResult.ok && !noticeResult.skipped) {
-        console.warn(
-          "[TelegramWebhook] Large-file notice failed:",
-          noticeResult.data?.description ||
-            noticeResult.error ||
-            "unknown error"
-        );
-      }
-    }
-
+    // 文件超过 20MB，无法通过 Telegram 频道导入
+    // 避免干扰，这里不做消息提醒
     return ok(c, {
       ignored: "file-too-large",
       key,
@@ -109,7 +89,7 @@ telegramWebhookRoutes.post("/webhook", async (c) => {
         messageId: media.messageId || message.message_id,
         fileName: media.fileName,
         fileSize: media.fileSize,
-        text: `文件已存在于 OtterHub。\n直链：${directLink}`,
+        text: `[OtterHub]\n文件已存在：${directLink}`,
       });
 
       if (!noticeResult.ok && !noticeResult.skipped) {

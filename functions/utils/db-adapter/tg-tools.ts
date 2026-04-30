@@ -535,7 +535,7 @@ function buildTelegramUploadNoticeText(payload: {
 }): string {
   const name = truncateFileName(payload.fileName, 60) || "unnamed";
   const size = formatFileSize(payload.fileSize);
-  return `✅ 上传成功\n文件：${name}\n大小：${size}\n链接：${payload.directLink}`;
+  return `[OtterHub]${name} · ${size}\n${payload.directLink}`;
 }
 
 /**
