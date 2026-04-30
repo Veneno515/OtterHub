@@ -1,18 +1,18 @@
-"use client"
+"use client";
 
-import { Shield, ShieldOff } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Shield, ShieldOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { cn } from "@/lib/utils"
-import { useGeneralSettingsStoreClient } from "@/stores/general-store"
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import { useGeneralSettingsStoreClient } from "@/stores/general-store";
 
 export function SafeModeToggle() {
-  const store = useGeneralSettingsStoreClient()
+  const store = useGeneralSettingsStoreClient();
 
   // store 为 null 表示 SSR 阶段，渲染骨架占位
   if (!store) {
@@ -24,10 +24,10 @@ export function SafeModeToggle() {
       >
         <Shield className="h-4 w-4" />
       </Button>
-    )
+    );
   }
 
-  const { safeMode, setSafeMode } = store
+  const { safeMode, setSafeMode } = store;
 
   return (
     <TooltipProvider>
@@ -41,7 +41,7 @@ export function SafeModeToggle() {
               "h-9 w-9",
               safeMode
                 ? "bg-primary/20 text-primary hover:bg-primary/30"
-                : "text-foreground/60 hover:text-foreground hover:bg-secondary/50",
+                : "text-foreground/60 hover:text-foreground hover:bg-secondary/50"
             )}
           >
             {safeMode ? (
@@ -52,10 +52,11 @@ export function SafeModeToggle() {
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>{safeMode ? "安全模式开启 · NSFW内容遮罩" : "安全模式关闭 · 显示全部内容"}</p>
+          <p>
+            {safeMode ? "安全模式开启 · NSFW 遮罩" : "安全模式关闭 · 显示全部"}
+          </p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
-  )
+  );
 }
-

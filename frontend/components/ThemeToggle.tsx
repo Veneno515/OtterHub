@@ -1,17 +1,17 @@
-"use client"
+"use client";
 
-import { Moon, Sun } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Moon, Sun } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { useTheme } from "next-themes"
+} from "@/components/ui/tooltip";
+import { useTheme } from "next-themes";
 
 export function ThemeToggle() {
-  const { resolvedTheme, setTheme } = useTheme()
+  const { resolvedTheme, setTheme } = useTheme();
 
   // resolvedTheme 在 SSR 时为 undefined，作为 hydration 保护信号
   if (!resolvedTheme) {
@@ -21,7 +21,7 @@ export function ThemeToggle() {
         size="icon"
         className="h-9 w-9 text-foreground/60 hover:text-foreground hover:bg-secondary/50"
       />
-    )
+    );
   }
 
   return (
@@ -31,7 +31,9 @@ export function ThemeToggle() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+            onClick={() =>
+              setTheme(resolvedTheme === "dark" ? "light" : "dark")
+            }
             className="h-9 w-9 text-foreground/60 hover:text-foreground hover:bg-secondary/50"
             suppressHydrationWarning
           >
@@ -43,10 +45,9 @@ export function ThemeToggle() {
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>{resolvedTheme === "dark" ? "切换到浅色模式" : "切换到深色模式"}</p>
+          <p>{resolvedTheme === "dark" ? "深色模式" : "浅色模式"}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
-  )
+  );
 }
-
