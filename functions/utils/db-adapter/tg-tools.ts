@@ -533,19 +533,9 @@ function buildTelegramUploadNoticeText(payload: {
   fileName: string;
   fileSize: number;
 }): string {
-  const lines = [
-    "Upload completed",
-    `Name: ${truncateFileName(payload.fileName, 120) || "unnamed"}`,
-    `Size: ${formatFileSize(payload.fileSize)}`,
-    `Direct Link: ${payload.directLink}`,
-    `File ID: ${payload.fileId}`,
-  ];
-
-  if (payload.messageId) {
-    lines.push(`Message ID: ${payload.messageId}`);
-  }
-
-  return lines.join("\n");
+  const name = truncateFileName(payload.fileName, 60) || "unnamed";
+  const size = formatFileSize(payload.fileSize);
+  return `✅ 上传成功\n文件：${name}\n大小：${size}\n链接：${payload.directLink}`;
 }
 
 /**
