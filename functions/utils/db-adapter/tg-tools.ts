@@ -5,15 +5,6 @@ import {
 } from "../file";
 import { FileType } from "@shared/types";
 
-const TELEGRAM_UPLOAD_NOTIFY_DISABLED = new Set([
-  "0",
-  "false",
-  "no",
-  "off",
-  "disable",
-  "disabled",
-]);
-
 /**
  * 构建 Telegram API URL
  */
@@ -410,26 +401,10 @@ export function getTelegramFileFromMessage(
 /**
  * 构建公开文件访问链接。
  */
-export function buildTelegramDirectLink(
-  publicBaseUrl: string | undefined,
-  fallbackOrigin: string,
-  key: string
-): string {
-  const base =
-    normalizePublicBaseUrl(publicBaseUrl) ||
-    normalizePublicBaseUrl(fallbackOrigin);
+export function buildTelegramDirectLink(origin: string, key: string): string {
+  const base = origin.replace(/\/+$/, "");
   const path = `/file/${key}`;
   return base ? `${base}${path}` : path;
-}
-
-/**
- * 判断是否需要在 Telegram 中回复上传完成通知。
- */
-export function shouldNotifyTelegramUpload(
-  rawValue: string | undefined
-): boolean {
-  if (!rawValue) return true;
-  return !TELEGRAM_UPLOAD_NOTIFY_DISABLED.has(rawValue.trim().toLowerCase());
 }
 
 /**
@@ -511,16 +486,13 @@ function getFileExtByMime(mimeType: string): string {
 }
 
 /**
- * 规范化用于回复直链的公开基础 URL。
+ * HTML 转义，防止特殊字符导致 Telegram API 报错。
  */
-function normalizePublicBaseUrl(rawValue: string | undefined): string {
-  if (!rawValue) return "";
-
-  try {
-    return new URL(rawValue).toString().replace(/\/+$/, "");
-  } catch {
-    return "";
-  }
+function escapeTelegramHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 /**
@@ -533,9 +505,21 @@ function buildTelegramUploadNoticeText(payload: {
   fileName: string;
   fileSize: number;
 }): string {
-  const name = truncateFileName(payload.fileName, 60) || "unnamed";
-  const size = formatFileSize(payload.fileSize);
-  return `[OtterHub]${name} · ${size}\n${payload.directLink}`;
+  const name = escapeTelegramHtml(
+    truncateFileName(payload.fileName, 60) || "unnamed"
+  );
+  const size = escapeTelegramHtml(formatFileSize(payload.fileSize));
+  const directLink = escapeTelegramHtml(payload.directLink);
+
+  const lines = [
+    "✅ <b>文件收录成功</b>",
+    "",
+    `<b>名称：</b>${name}`,
+    `<b>大小：</b>${size}`,
+    `<b>直链：</b>${directLink}`,
+  ];
+
+  return lines.join("\n");
 }
 
 /**
@@ -548,7 +532,11 @@ async function postTelegramMessage(
   const response = await fetch(buildTgApiUrl(botToken, "sendMessage"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      parse_mode: "HTML",
+      disable_web_page_preview: true,
+      ...payload,
+    }),
   });
   const data = await response.json().catch(() => ({}));
   return { ok: response.ok && data?.ok, data };

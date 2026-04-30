@@ -9,7 +9,6 @@ import {
   buildTelegramDirectLink,
   getTelegramFileFromMessage,
   sendTelegramUploadNotice,
-  shouldNotifyTelegramUpload,
 } from "@utils/db-adapter/tg-tools";
 
 export const telegramWebhookRoutes = new Hono<{ Bindings: Env }>();
@@ -59,14 +58,10 @@ telegramWebhookRoutes.post("/webhook", async (c) => {
   }
 
   const key = buildKeyId(media.fileType, media.fileId, media.ext);
-  const directLink = buildTelegramDirectLink(
-    c.env.PUBLIC_BASE_URL,
-    new URL(c.req.url).origin,
-    key
-  );
+  const origin = new URL(c.req.url).origin;
+  const directLink = buildTelegramDirectLink(origin, key);
   const chatId = message?.chat?.id;
-  const shouldNotify =
-    chatId && shouldNotifyTelegramUpload(c.env.TG_UPLOAD_NOTIFY);
+  const shouldNotify = Boolean(chatId);
 
   if (media.fileSize > MAX_CHUNK_SIZE) {
     // 文件超过 20MB，无法通过 Telegram 频道导入
@@ -185,10 +180,7 @@ telegramWebhookRoutes.post("/webhook/setup", async (c) => {
     return fail(c, "TG_WEBHOOK_SECRET is not configured", 400);
   }
 
-  const webhookUrl = buildTelegramWebhookUrl(
-    c.env.PUBLIC_BASE_URL,
-    new URL(c.req.url).origin
-  );
+  const webhookUrl = buildTelegramWebhookUrl(new URL(c.req.url).origin);
   const result = await callTelegramApi(c.env.TG_BOT_TOKEN, "setWebhook", {
     url: webhookUrl,
     secret_token: c.env.TG_WEBHOOK_SECRET,
@@ -228,24 +220,7 @@ async function callTelegramApi(
 /**
  * 生成当前部署可访问的 Telegram webhook URL。
  */
-function buildTelegramWebhookUrl(
-  publicBaseUrl: string | undefined,
-  fallbackOrigin: string
-): string {
-  const base =
-    normalizeBaseUrl(publicBaseUrl) || normalizeBaseUrl(fallbackOrigin);
+function buildTelegramWebhookUrl(origin: string): string {
+  const base = origin.replace(/\/+$/, "");
   return `${base}/telegram/webhook`;
-}
-
-/**
- * 规范化公开访问基础 URL。
- */
-function normalizeBaseUrl(rawValue: string | undefined): string {
-  if (!rawValue) return "";
-
-  try {
-    return new URL(rawValue).toString().replace(/\/+$/, "");
-  } catch {
-    return "";
-  }
 }
