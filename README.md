@@ -101,7 +101,7 @@ OtterHub 是一个 **为个人使用场景定制** 的私人云盘方案：
 
 3. **访问网站**
    - 前端：`http://localhost:3000`
-   - 后端：`http://localhost:8080` (由 Wrangler 代理)
+   - 后端：`http://localhost:8788` (由 Wrangler 代理)
 
 > [!TIP]
 > 开发环境下密码为`123456`，且采用本地 R2 存储，可以直接上传文件，方便调试。

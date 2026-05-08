@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const FormData = require("form-data");
 
-const API_URL = "http://localhost:8080";
+const API_URL = "http://localhost:8788";
 const PASSWORD = "123456";
 const API_TOKEN = "123456";
 const trashPrefix = "trash:";
@@ -86,7 +86,7 @@ describe("API Endpoints", function () {
       assert.equal(response.status, 200);
       const result = await response.json();
       assert.ok(result.success);
-      
+
       // 清理测试上传的文件
       const fileKey = result.data;
       await fetch(`${API_URL}/file/${fileKey}`, {
@@ -153,7 +153,7 @@ describe("API Endpoints", function () {
       const responseText = await response.text();
       assert.ok(
         responseText.includes("otterhub-icon.svg") ||
-          responseText.includes("svg"),
+          responseText.includes("svg")
       );
     });
   });
@@ -183,19 +183,25 @@ describe("API Endpoints", function () {
       }
 
       // 移入回收站后，原始路径应该返回 404 (或失败)
-      const originalResponse = await fetch(`${API_URL}/file/${uploadedFileKey}`, {
-        headers: {
-          Cookie: authCookie,
-        },
-      });
+      const originalResponse = await fetch(
+        `${API_URL}/file/${uploadedFileKey}`,
+        {
+          headers: {
+            Cookie: authCookie,
+          },
+        }
+      );
       assert.notEqual(originalResponse.status, 200);
 
       // 从回收站路径应该可以访问到文件内容
-      const trashResponse = await fetch(`${API_URL}/trash/${trashPrefix}${uploadedFileKey}`, {
-        headers: {
-          Cookie: authCookie,
-        },
-      });
+      const trashResponse = await fetch(
+        `${API_URL}/trash/${trashPrefix}${uploadedFileKey}`,
+        {
+          headers: {
+            Cookie: authCookie,
+          },
+        }
+      );
       assert.equal(trashResponse.status, 200);
       const text = await trashResponse.text();
       assert.ok(text.includes("svg"));
@@ -219,11 +225,14 @@ describe("API Endpoints", function () {
       assert.ok(result.success);
 
       // 还原后，原始路径应该恢复访问
-      const restoredResponse = await fetch(`${API_URL}/file/${uploadedFileKey}`, {
-        headers: {
-          Cookie: authCookie,
-        },
-      });
+      const restoredResponse = await fetch(
+        `${API_URL}/file/${uploadedFileKey}`,
+        {
+          headers: {
+            Cookie: authCookie,
+          },
+        }
+      );
       assert.equal(restoredResponse.status, 200);
     });
   });

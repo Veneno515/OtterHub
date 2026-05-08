@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,10 +12,13 @@ import {
 import { useTheme } from "next-themes";
 
 export function ThemeToggle() {
+  const [mounted, setMounted] = useState(false);
   const { resolvedTheme, setTheme } = useTheme();
 
-  // resolvedTheme 在 SSR 时为 undefined，作为 hydration 保护信号
-  if (!resolvedTheme) {
+  // 组件挂载后立即更新状态，避免 hydration mismatch
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted || !resolvedTheme) {
     return (
       <Button
         variant="ghost"
@@ -24,6 +28,8 @@ export function ThemeToggle() {
     );
   }
 
+  const isDark = resolvedTheme === "dark";
+
   return (
     <TooltipProvider delayDuration={0}>
       <Tooltip>
@@ -31,13 +37,10 @@ export function ThemeToggle() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() =>
-              setTheme(resolvedTheme === "dark" ? "light" : "dark")
-            }
+            onClick={() => setTheme(isDark ? "light" : "dark")}
             className="h-9 w-9 text-foreground/60 hover:text-foreground hover:bg-secondary/50"
-            suppressHydrationWarning
           >
-            {resolvedTheme === "dark" ? (
+            {isDark ? (
               <Moon className="h-4 w-4" />
             ) : (
               <Sun className="h-4 w-4" />
@@ -45,7 +48,7 @@ export function ThemeToggle() {
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>{resolvedTheme === "dark" ? "深色模式" : "浅色模式"}</p>
+          <p>{isDark ? "深色模式" : "浅色模式"}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
