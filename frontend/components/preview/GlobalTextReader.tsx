@@ -8,13 +8,10 @@ import { Copy, CopyCheck, Download, Minus, X, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { DraggablePreviewBookmark } from "./DraggablePreviewBookmark";
 
-export function GlobalTextReader({
-  position = "top-[60%]",
-}: {
-  position?: string;
-}) {
-  const { text, minimize, maximize, close } = usePreviewStore();
+export function GlobalTextReader() {
+  const { audio, video, text, minimize, maximize, close } = usePreviewStore();
   const activeFile = text?.file;
   const viewState = text?.viewState;
 
@@ -165,42 +162,26 @@ export function GlobalTextReader({
       </div>
 
       {/* MINIMIZED BOOKMARK (Right Side) */}
-      <div
-        className={cn(
-          "fixed right-0 z-49 transition-all duration-300 ease-in-out group",
-          position,
-          viewState === "minimized"
-            ? "opacity-50 hover:opacity-100 pointer-events-auto"
-            : "translate-x-full opacity-0 pointer-events-none"
-        )}
+      <DraggablePreviewBookmark
+        type="text"
+        visible={viewState === "minimized"}
+        visibleTypes={[
+          ...(audio?.viewState === "minimized" ? ["audio" as const] : []),
+          ...(video?.viewState === "minimized" ? ["video" as const] : []),
+          "text",
+        ]}
         title={activeFile.metadata?.fileName}
+        className="relative flex items-center justify-center bg-background/80 backdrop-blur-md border border-r-0 border-border shadow-md rounded-l-full w-11 h-9"
+        onActivate={() => maximize("text")}
+        onClose={(e) => {
+          e.stopPropagation();
+          close("text");
+        }}
       >
-        <div
-          className="relative flex items-center justify-center bg-background/80 backdrop-blur-md border border-r-0 border-border shadow-md rounded-l-full w-11 h-9 cursor-pointer"
-          onClick={() => maximize("text")}
-        >
-          {/* Main Icon */}
-          <div className="z-10 text-primary">
-            <FileText className="w-5 h-5" />
-          </div>
-
-          {/* Close Button (Bottom Left) */}
-          <div className="absolute -bottom-2 -left-2 opacity-0 group-hover:opacity-100 transition-all duration-200 scale-75 group-hover:scale-100 z-20">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-5 w-5 rounded-full bg-gray-500/80 hover:bg-destructive text-white shadow-sm p-0.5"
-              onClick={(e) => {
-                e.stopPropagation();
-                close("text");
-              }}
-              title="关闭"
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          </div>
+        <div className="z-10 text-primary">
+          <FileText className="w-5 h-5" />
         </div>
-      </div>
+      </DraggablePreviewBookmark>
     </>
   );
 }
