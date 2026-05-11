@@ -13,16 +13,8 @@ import { useTheme } from "next-themes";
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
 
-  if (!resolvedTheme) {
-    return (
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-9 w-9 text-foreground/60 hover:text-foreground hover:bg-secondary/50"
-      />
-    );
-  }
-
+  // resolvedTheme 在服务端为 undefined，客户端才为 'light' 或 'dark'
+  const isHydrated = resolvedTheme !== undefined;
   const isDark = resolvedTheme === "dark";
 
   return (
@@ -32,10 +24,15 @@ export function ThemeToggle() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setTheme(isDark ? "light" : "dark")}
+            onClick={() => {
+              if (!isHydrated) return;
+              setTheme(isDark ? "light" : "dark");
+            }}
             className="h-9 w-9 text-foreground/60 hover:text-foreground hover:bg-secondary/50"
+            disabled={!isHydrated}
+            aria-label="切换主题"
           >
-            {isDark ? (
+            {!isHydrated ? null : isDark ? (
               <Moon className="h-4 w-4" />
             ) : (
               <Sun className="h-4 w-4" />
@@ -43,7 +40,7 @@ export function ThemeToggle() {
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>{isDark ? "深色模式" : "浅色模式"}</p>
+          <p>{!isHydrated ? "切换主题" : isDark ? "深色模式" : "浅色模式"}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
