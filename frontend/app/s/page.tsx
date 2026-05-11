@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense, useMemo } from "react";
+import { useCallback, useEffect, useState, Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { shareApi } from "@/lib/api/share";
 import { Button } from "@/components/ui/button";
@@ -89,12 +89,15 @@ function ShareContent() {
   );
   const currentPreviewFile = previewableFiles[currentPreviewIndexInList];
 
-  const handlePreviewNav = (step: number) => {
-    const len = previewableFiles.length;
-    if (len === 0) return;
-    const nextIdx = (currentPreviewIndexInList + step + len) % len;
-    setPreviewIndex(previewableFiles[nextIdx].originalIndex);
-  };
+  const handlePreviewNav = useCallback(
+    (step: number) => {
+      const len = previewableFiles.length;
+      if (len === 0) return;
+      const nextIdx = (currentPreviewIndexInList + step + len) % len;
+      setPreviewIndex(previewableFiles[nextIdx].originalIndex);
+    },
+    [previewableFiles, currentPreviewIndexInList]
+  );
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -105,7 +108,7 @@ function ShareContent() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [previewIndex, currentPreviewIndexInList]);
+  }, [previewIndex, handlePreviewNav]);
 
   const executeDownload = async (action: () => string, filename: string) => {
     if (!token) return;

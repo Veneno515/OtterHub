@@ -1,8 +1,8 @@
-import { create } from 'zustand';
-import { FileItem } from '@shared/types';
+import { create } from "zustand";
+import { FileItem } from "@shared/types";
 
-export type PreviewType = 'audio' | 'video' | 'text';
-export type ViewState = 'full' | 'minimized';
+export type PreviewType = "audio" | "video" | "text";
+export type ViewState = "full" | "minimized";
 
 export interface PreviewItemState {
   file: FileItem;
@@ -25,23 +25,27 @@ export const usePreviewStore = create<PreviewState>((set) => ({
   video: null,
   text: null,
 
-  openPreview: (file, type) => set((state) => ({
-    [type]: { file, viewState: 'full' }
-  })),
+  openPreview: (file, type) =>
+    set((_state) => ({
+      [type]: { file, viewState: "full" },
+    })),
 
-  minimize: (type) => set((state) => {
-    const current = state[type];
-    if (!current) return {};
-    return { [type]: { ...current, viewState: 'minimized' } };
-  }),
+  minimize: (type) =>
+    set((state) => {
+      const current = state[type];
+      if (!current) return {};
+      return { [type]: { ...current, viewState: "minimized" } };
+    }),
 
-  maximize: (type) => set((state) => {
-    const current = state[type];
-    if (!current) return {};
-    return { [type]: { ...current, viewState: 'full' } };
-  }),
+  maximize: (type) =>
+    set((state) => {
+      const current = state[type];
+      if (!current) return {};
+      return { [type]: { ...current, viewState: "full" } };
+    }),
 
-  close: (type) => set((state) => ({
-    [type]: null
-  })),
+  close: (type) =>
+    set((_state) => ({
+      [type]: null,
+    })),
 }));

@@ -3,7 +3,7 @@ import { processBatch } from "./common";
 /**
  * 递归扫描 DataTransferItemList 中的所有文件
  * 支持文件夹拖拽上传，并保留文件路径结构
- * 
+ *
  * @param items DataTransferItemList 拖拽项列表
  * @param onProgress 进度回调 (仅针对顶层项目)
  */
@@ -43,7 +43,7 @@ export async function scanFiles(
    * 将文件重命名为包含完整路径的名称
    */
   function processFile(entry: FileSystemFileEntry): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, _reject) => {
       entry.file(
         (file) => {
           // entry.fullPath 通常以 / 开头，例如 "/folder/file.txt"
@@ -80,7 +80,7 @@ export async function scanFiles(
 
     // readEntries 可能不会一次返回所有文件，需要循环读取
     const readEntries = () =>
-      new Promise<FileSystemEntry[]>((resolve, reject) => {
+      new Promise<FileSystemEntry[]>((resolve, _reject) => {
         reader.readEntries(resolve, (err) => {
           console.warn(`读取目录失败: ${entry.fullPath}`, err);
           resolve([]); // 忽略错误

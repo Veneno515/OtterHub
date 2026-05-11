@@ -1,6 +1,21 @@
 "use client";
 
-import { Download, Trash2, X, Toolbox, Check, Tag, Copy, FilePen, Share2, ImageIcon, Music, Video, FileText, XIcon } from "lucide-react";
+import {
+  Download,
+  Trash2,
+  X,
+  Toolbox,
+  Check,
+  Tag,
+  Copy,
+  FilePen,
+  Share2,
+  ImageIcon,
+  Music,
+  Video,
+  FileText,
+  XIcon,
+} from "lucide-react";
 import { useState, useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -12,10 +27,31 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { useFileDataStore, useFilteredFiles, useFileBuckets } from "@/stores/file";
-import { useFileUIStore, useActiveSelectedKeys, useTotalSelectedKeys, useSelectedStats, clearAllSelection, removeSelectionFromAllTypes } from "@/stores/file";
-import { getFileDownloadUrl, getFileUrl, moveToTrash, deleteFile } from "@/lib/api";
-import { downloadFile, downloadFiles, processBatch, type DirectoryHandleResult } from "@/lib/utils";
+import {
+  useFileDataStore,
+  useFilteredFiles,
+  useFileBuckets,
+} from "@/stores/file";
+import {
+  useFileUIStore,
+  useActiveSelectedKeys,
+  useTotalSelectedKeys,
+  useSelectedStats,
+  clearAllSelection,
+  removeSelectionFromAllTypes,
+} from "@/stores/file";
+import {
+  getFileDownloadUrl,
+  getFileUrl,
+  moveToTrash,
+  deleteFile,
+} from "@/lib/api";
+import {
+  downloadFile,
+  downloadFiles,
+  processBatch,
+  type DirectoryHandleResult,
+} from "@/lib/utils";
 import { ViewMode } from "@/lib/types";
 import { BatchEditTagsDialog } from "./BatchEditTagsDialog";
 import { BatchRenameDialog } from "./BatchRenameDialog";
@@ -43,13 +79,9 @@ const typeNames: Record<FileType, string> = {
 };
 
 export function BatchOperationsBar() {
-  const {
-    activeType,
-    updateFileMetadata,
-    moveToTrashLocal,
-    deleteFilesLocal,
-  } = useFileDataStore();
-  
+  const { activeType, updateFileMetadata, moveToTrashLocal, deleteFilesLocal } =
+    useFileDataStore();
+
   const {
     clearSelection,
     addSelection,
@@ -69,14 +101,17 @@ export function BatchOperationsBar() {
   const [showBatchRename, setShowBatchRename] = useState(false);
   const [showBatchShare, setShowBatchShare] = useState(false);
   const [showDirGuide, setShowDirGuide] = useState(false);
-  const [pendingDownloadFiles, setPendingDownloadFiles] = useState<Array<{ key: string; metadata: typeof allItems[0]["metadata"] }> | null>(null);
+  const [pendingDownloadFiles, setPendingDownloadFiles] = useState<Array<{
+    key: string;
+    metadata: (typeof allItems)[0]["metadata"];
+  }> | null>(null);
 
   const filteredFiles = useFilteredFiles();
 
   // ===== 跨类型文件数据 =====
   // 获取所有类型的文件并构建 Map
   const allItems = useMemo(() => {
-    return Object.values(buckets).flatMap(bucket => bucket.items);
+    return Object.values(buckets).flatMap((bucket) => bucket.items);
   }, [buckets]);
 
   const allItemMap = useMemo(() => {
@@ -86,7 +121,7 @@ export function BatchOperationsBar() {
   // 获取所有选中的文件（跨类型）
   const selectedItems = useMemo(() => {
     return totalSelectedKeys
-      .map(key => allItemMap.get(key))
+      .map((key) => allItemMap.get(key))
       .filter(Boolean) as typeof allItems;
   }, [totalSelectedKeys, allItemMap]);
 
@@ -105,16 +140,16 @@ export function BatchOperationsBar() {
 
   const activeSelectedSet = useMemo(
     () => new Set(activeSelectedKeys),
-    [activeSelectedKeys],
+    [activeSelectedKeys]
   );
 
   const isAllSelected =
-    currentFiles.length > 0 && 
-    currentFiles.every(file => activeSelectedSet.has(file.name));
+    currentFiles.length > 0 &&
+    currentFiles.every((file) => activeSelectedSet.has(file.name));
 
   /** ===== 批量标签成功回调 ===== */
   const handleBatchTagSuccess = (
-    updatedFiles: Array<{ name: string; tags: FileTag[] }>,
+    updatedFiles: Array<{ name: string; tags: FileTag[] }>
   ) => {
     updatedFiles.forEach(({ name, tags }) => {
       const file = allItemMap.get(name);
@@ -129,7 +164,7 @@ export function BatchOperationsBar() {
 
   /** ===== 批量重命名成功回调 ===== */
   const handleBatchRenameSuccess = (
-    updatedFiles: Array<{ name: string; fileName: string }>,
+    updatedFiles: Array<{ name: string; fileName: string }>
   ) => {
     updatedFiles.forEach(({ name, fileName }) => {
       const file = allItemMap.get(name);
@@ -144,7 +179,7 @@ export function BatchOperationsBar() {
 
   /** ===== 开始批量下载 ===== */
   const startBatchDownload = async (
-    files: Array<{ key: string; metadata: typeof allItems[0]["metadata"] }>,
+    files: Array<{ key: string; metadata: (typeof allItems)[0]["metadata"] }>,
     dirHandleResult?: DirectoryHandleResult
   ) => {
     const toastId = toast.loading(`准备下载 ${files.length} 个文件...`);
@@ -160,7 +195,9 @@ export function BatchOperationsBar() {
           toast.loading(`正在下载到 ${dirName}...`, { id: toastId });
         },
         onFileStart: (index: number, fileName: string) => {
-          toast.loading(`下载中 (${index + 1}/${files.length}): ${fileName}`, { id: toastId });
+          toast.loading(`下载中 (${index + 1}/${files.length}): ${fileName}`, {
+            id: toastId,
+          });
         },
         onFileComplete: (index: number, fileName: string, success: boolean) => {
           if (!success) {
@@ -184,7 +221,7 @@ export function BatchOperationsBar() {
         });
       }
     } catch (error) {
-      if (error instanceof Error && error.message === 'NO_DIRECTORY_HANDLE') {
+      if (error instanceof Error && error.message === "NO_DIRECTORY_HANDLE") {
         // 需要显示引导弹窗
         toast.dismiss(toastId);
         setPendingDownloadFiles(files);
@@ -215,25 +252,32 @@ export function BatchOperationsBar() {
         if (!file) return null;
         return { key, metadata: file.metadata };
       })
-      .filter(Boolean) as Array<{ key: string; metadata: typeof allItems[0]["metadata"] }>;
+      .filter(Boolean) as Array<{
+      key: string;
+      metadata: (typeof allItems)[0]["metadata"];
+    }>;
 
     if (files.length === 1) {
       const [{ key, metadata }] = files;
       const toastId = toast.loading(`准备下载: ${metadata.fileName}`);
 
       try {
-        const result = await downloadFile(getFileDownloadUrl(key), metadata, (progress) => {
-          toast.loading(
-            `下载中: ${metadata.fileName} (${progress.percentage}%)`,
-            { id: toastId }
-          );
-        });
+        const result = await downloadFile(
+          getFileDownloadUrl(key),
+          metadata,
+          (progress) => {
+            toast.loading(
+              `下载中: ${metadata.fileName} (${progress.percentage}%)`,
+              { id: toastId }
+            );
+          }
+        );
         if (result.status === "cancelled") {
           toast.dismiss(toastId);
           return;
         }
         toast.success(`下载完成: ${metadata.fileName}`, { id: toastId });
-      } catch (error) {
+      } catch (_error) {
         toast.error(`下载失败: ${metadata.fileName}`, { id: toastId });
       }
       return;
@@ -251,11 +295,13 @@ export function BatchOperationsBar() {
   /** ===== 批量删除（跨类型） ===== */
   const handleBatchDelete = async () => {
     // 构建确认信息，包含各类型统计
-    const statsText = selectedStats.map(s => `${typeNames[s.type]}:${s.count}`).join("，");
+    const statsText = selectedStats
+      .map((s) => `${typeNames[s.type]}:${s.count}`)
+      .join("，");
     const confirmMsg = hasCrossTypeSelection
       ? `确认删除这 ${totalCount} 个文件？\n（${statsText}）`
       : `确认删除这 ${totalCount} 个文件？`;
-    
+
     if (!confirm(confirmMsg)) return;
 
     const toastId = toast.loading(`正在删除 ${totalCount} 个文件...`);
@@ -274,7 +320,7 @@ export function BatchOperationsBar() {
             } else {
               failed.push(key);
             }
-          } catch (err) {
+          } catch (_err) {
             failed.push(key);
           }
         },
@@ -283,7 +329,7 @@ export function BatchOperationsBar() {
             id: toastId,
           });
         },
-        10,
+        10
       );
 
       // 更新本地状态
@@ -303,7 +349,7 @@ export function BatchOperationsBar() {
           description: `${failed.length} 个文件删除失败，成功删除 ${successful.length} 个`,
         });
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("操作失败", {
         id: toastId,
         description: "执行批量删除时发生未知错误",
@@ -311,15 +357,16 @@ export function BatchOperationsBar() {
     }
   };
 
-
   /** ===== 批量彻底删除（跨类型） ===== */
   const handleBatchPermanentDelete = async () => {
     // 构建确认信息，包含各类型统计
-    const statsText = selectedStats.map(s => `${typeNames[s.type]}:${s.count}`).join("，");
+    const statsText = selectedStats
+      .map((s) => `${typeNames[s.type]}:${s.count}`)
+      .join("，");
     const confirmMsg = hasCrossTypeSelection
       ? `确认【彻底删除】这 ${totalCount} 个文件？此操作不可恢复！\n（${statsText}）`
       : `确认【彻底删除】这 ${totalCount} 个文件？此操作不可恢复！`;
-    
+
     if (!confirm(confirmMsg)) return;
 
     const toastId = toast.loading(`正在删除 ${totalCount} 个文件...`);
@@ -338,7 +385,7 @@ export function BatchOperationsBar() {
             } else {
               failed.push(key);
             }
-          } catch (err) {
+          } catch (_err) {
             failed.push(key);
           }
         },
@@ -347,7 +394,7 @@ export function BatchOperationsBar() {
             id: toastId,
           });
         },
-        10,
+        10
       );
 
       if (successful.length > 0) {
@@ -358,14 +405,16 @@ export function BatchOperationsBar() {
       removeSelectionFromAllTypes(successful);
 
       if (failed.length === 0) {
-        toast.success(`成功彻底删除 ${successful.length} 个文件`, { id: toastId });
+        toast.success(`成功彻底删除 ${successful.length} 个文件`, {
+          id: toastId,
+        });
       } else {
         toast.error(`部分文件删除失败`, {
           id: toastId,
           description: `${failed.length} 个文件彻底删除失败，成功删除 ${successful.length} 个`,
         });
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("操作失败", {
         id: toastId,
         description: "执行批量彻底删除时发生未知错误",
@@ -390,7 +439,15 @@ export function BatchOperationsBar() {
   };
 
   /** ===== 类型统计标签组件 ===== */
-  const TypeBadge = ({ type, count, onClear }: { type: FileType; count: number; onClear?: () => void }) => {
+  const TypeBadge = ({
+    type,
+    count,
+    onClear,
+  }: {
+    type: FileType;
+    count: number;
+    onClear?: () => void;
+  }) => {
     const Icon = typeIcons[type];
     return (
       <Badge
@@ -420,7 +477,12 @@ export function BatchOperationsBar() {
             {selectedStats.length > 0 && (
               <div className="hidden md:flex items-center gap-1">
                 {selectedStats.map(({ type, count }) => (
-                  <TypeBadge key={type} type={type} count={count} onClear={() => clearSelection(type)} />
+                  <TypeBadge
+                    key={type}
+                    type={type}
+                    count={count}
+                    onClear={() => clearSelection(type)}
+                  />
                 ))}
               </div>
             )}

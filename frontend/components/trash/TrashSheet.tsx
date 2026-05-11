@@ -8,7 +8,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
   SheetDescription,
 } from "@/components/ui/sheet";
 import { FileType } from "@shared/types";
@@ -60,12 +59,12 @@ export function TrashSheet({ open, onOpenChange }: TrashSheetProps) {
 
     setIsBatchProcessing(true);
     const toastId = toast.loading(
-      `正在还原 ${selectedTrashKeys.length} 个文件...`,
+      `正在还原 ${selectedTrashKeys.length} 个文件...`
     );
 
     try {
       const selectedItems = trashBucket.items.filter((item) =>
-        selectedTrashKeys.includes(item.name),
+        selectedTrashKeys.includes(item.name)
       );
 
       await processBatch(
@@ -79,7 +78,7 @@ export function TrashSheet({ open, onOpenChange }: TrashSheetProps) {
             id: toastId,
           });
         },
-        10,
+        10
       );
 
       clearSelection(FileType.Trash);
@@ -87,7 +86,7 @@ export function TrashSheet({ open, onOpenChange }: TrashSheetProps) {
       toast.success(`已还原 ${selectedTrashKeys.length} 个文件`, {
         id: toastId,
       });
-    } catch (error) {
+    } catch (_error) {
       toast.error("批量还原失败", { id: toastId });
     } finally {
       setIsBatchProcessing(false);
@@ -97,19 +96,19 @@ export function TrashSheet({ open, onOpenChange }: TrashSheetProps) {
   const handleBatchDelete = async () => {
     if (
       !confirm(
-        `确定永久删除选中的 ${selectedTrashKeys.length} 个文件? 此操作不可恢复！`,
+        `确定永久删除选中的 ${selectedTrashKeys.length} 个文件? 此操作不可恢复！`
       )
     )
       return;
 
     setIsBatchProcessing(true);
     const toastId = toast.loading(
-      `正在删除 ${selectedTrashKeys.length} 个文件...`,
+      `正在删除 ${selectedTrashKeys.length} 个文件...`
     );
 
     try {
       const selectedItems = trashBucket.items.filter((item) =>
-        selectedTrashKeys.includes(item.name),
+        selectedTrashKeys.includes(item.name)
       );
 
       await processBatch(
@@ -123,14 +122,14 @@ export function TrashSheet({ open, onOpenChange }: TrashSheetProps) {
             id: toastId,
           });
         },
-        10,
+        10
       );
 
       clearSelection(FileType.Trash);
       toast.success(`已永久删除 ${selectedTrashKeys.length} 个文件`, {
         id: toastId,
       });
-    } catch (error) {
+    } catch (_error) {
       toast.error("批量删除失败", { id: toastId });
     } finally {
       setIsBatchProcessing(false);
@@ -160,11 +159,11 @@ export function TrashSheet({ open, onOpenChange }: TrashSheetProps) {
             id: toastId,
           });
         },
-        10,
+        10
       );
 
       toast.success("回收站已清空", { id: toastId });
-    } catch (error) {
+    } catch (_error) {
       toast.error("清空回收站失败", { id: toastId });
     } finally {
       setIsBatchProcessing(false);
@@ -175,9 +174,7 @@ export function TrashSheet({ open, onOpenChange }: TrashSheetProps) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:w-[540px] flex flex-col p-0 bg-background/95 backdrop-blur-xl border-l border-border">
         <SheetHeader className="px-6 py-4 border-b border-border">
-          <SheetTitle className="flex items-center gap-2">
-            回收站
-          </SheetTitle>
+          <SheetTitle className="flex items-center gap-2">回收站</SheetTitle>
           <SheetDescription className="text-sm text-foreground/80">
             文件将于 30 天后永久删除。{" "}
             {!isEmpty && (

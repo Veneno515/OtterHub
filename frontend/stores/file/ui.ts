@@ -38,7 +38,7 @@ interface FileUIState {
 
 export const useFileUIStore = create<FileUIState>()(
   persist(
-    (set, get) => ({
+    (set, _get) => ({
       viewMode: ViewMode.Grid,
       itemsPerPage: 20,
       currentPage: 0,
@@ -53,7 +53,7 @@ export const useFileUIStore = create<FileUIState>()(
         [FileType.Document]: [],
         [FileType.Trash]: [],
       },
-      
+
       forceLoadFiles: [],
 
       setViewMode: (mode) => {
@@ -88,7 +88,11 @@ export const useFileUIStore = create<FileUIState>()(
       selectAll: (names, type) =>
         set((state) => {
           const currentType = type ?? useFileDataStore.getState().activeType;
-          const keys = names ?? useFileDataStore.getState().buckets[currentType].items.map(i => i.name);
+          const keys =
+            names ??
+            useFileDataStore
+              .getState()
+              .buckets[currentType].items.map((i) => i.name);
           return {
             selectedKeys: {
               ...state.selectedKeys,
@@ -102,7 +106,7 @@ export const useFileUIStore = create<FileUIState>()(
           const currentType = type ?? useFileDataStore.getState().activeType;
           const current = state.selectedKeys[currentType] || [];
           const newSet = new Set(current);
-          names.forEach(name => newSet.add(name));
+          names.forEach((name) => newSet.add(name));
           return {
             selectedKeys: {
               ...state.selectedKeys,
@@ -119,7 +123,7 @@ export const useFileUIStore = create<FileUIState>()(
           return {
             selectedKeys: {
               ...state.selectedKeys,
-              [currentType]: current.filter(key => !toRemove.has(key)),
+              [currentType]: current.filter((key) => !toRemove.has(key)),
             },
           };
         }),
@@ -170,22 +174,32 @@ export const useTotalSelectedKeys = () => {
 /** 获取所有类型中选中的总数 */
 export const useTotalSelectedCount = () => {
   const selectedKeys = useFileUIStore((s) => s.selectedKeys);
-  return useMemo(() => Object.values(selectedKeys).flat().length, [selectedKeys]);
+  return useMemo(
+    () => Object.values(selectedKeys).flat().length,
+    [selectedKeys]
+  );
 };
 
 /** 检查是否有任何选中的文件 */
 export const useHasAnySelection = () => {
   const selectedKeys = useFileUIStore((s) => s.selectedKeys);
-  return useMemo(() => Object.values(selectedKeys).some(keys => keys.length > 0), [selectedKeys]);
+  return useMemo(
+    () => Object.values(selectedKeys).some((keys) => keys.length > 0),
+    [selectedKeys]
+  );
 };
 
 /** 按类型分组的选中统计 */
 export const useSelectedStats = () => {
   const selectedKeys = useFileUIStore((s) => s.selectedKeys);
-  return useMemo(() =>
-    Object.entries(selectedKeys)
-      .map(([type, keys]) => ({ type: type as FileType, count: (keys as string[]).length }))
-      .filter(s => s.count > 0),
+  return useMemo(
+    () =>
+      Object.entries(selectedKeys)
+        .map(([type, keys]) => ({
+          type: type as FileType,
+          count: (keys as string[]).length,
+        }))
+        .filter((s) => s.count > 0),
     [selectedKeys]
   );
 };
@@ -207,9 +221,12 @@ export const clearAllSelection = () => {
 export const removeSelectionFromAllTypes = (keysToRemove: string[]) => {
   const keysSet = new Set(keysToRemove);
   useFileUIStore.setState((state) => ({
-    selectedKeys: Object.entries(state.selectedKeys).reduce((acc, [type, keys]) => {
-      acc[type as FileType] = keys.filter(key => !keysSet.has(key));
-      return acc;
-    }, {} as Record<FileType, string[]>),
+    selectedKeys: Object.entries(state.selectedKeys).reduce(
+      (acc, [type, keys]) => {
+        acc[type as FileType] = keys.filter((key) => !keysSet.has(key));
+        return acc;
+      },
+      {} as Record<FileType, string[]>
+    ),
   }));
 };

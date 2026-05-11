@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,13 +11,9 @@ import {
 import { useTheme } from "next-themes";
 
 export function ThemeToggle() {
-  const [mounted, setMounted] = useState(false);
   const { resolvedTheme, setTheme } = useTheme();
 
-  // 组件挂载后立即更新状态，避免 hydration mismatch
-  useEffect(() => setMounted(true), []);
-
-  if (!mounted || !resolvedTheme) {
+  if (!resolvedTheme) {
     return (
       <Button
         variant="ghost"
