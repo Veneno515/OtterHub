@@ -23,8 +23,9 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Progress } from "@/components/ui/progress";
-import { getFileDownloadUrl } from "@/lib/api";
+import { getFileDownloadUrl, getFileUrl } from "@/lib/api";
 import { downloadFile, formatFileSize } from "@/lib/utils";
+import { DIRECT_DOWNLOAD_LIMIT } from "@/lib/types";
 import { FileMetadata, FileType } from "@shared/types";
 
 type FileStatus = "pending" | "success" | "failed";
@@ -49,6 +50,15 @@ const FILE_ICONS: Record<string, React.ReactNode> = {
   [FileType.Audio]: <Music className="h-4 w-4 text-emerald-400" />,
 };
 
+/** 判断移动端批量下载中是否应直接打开大媒体文件。 */
+function shouldOpenLargeMedia(entry: QueueEntry) {
+  return (
+    entry.metadata.fileSize > DIRECT_DOWNLOAD_LIMIT &&
+    (entry.fileType === FileType.Audio || entry.fileType === FileType.Video)
+  );
+}
+
+/** 移动端批量下载队列，要求用户逐个点击触发浏览器下载。 */
 export function MobileBatchDownloadDialog({
   files,
   open,
@@ -84,6 +94,13 @@ export function MobileBatchDownloadDialog({
     setActiveIndex(index);
 
     try {
+      if (shouldOpenLargeMedia(entry)) {
+        window.open(getFileUrl(entry.key), "_blank", "noopener,noreferrer");
+        updateStatus(index, "success");
+        toast.info("已打开文件链接，请使用浏览器下载");
+        return;
+      }
+
       const { status } = await downloadFile(
         getFileDownloadUrl(entry.key),
         entry.metadata

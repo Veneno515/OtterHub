@@ -1,25 +1,53 @@
 import { useState, useMemo, useRef } from "react";
-import { useActiveSelectedKeys, useFileDataStore, useFileUIStore } from "@/stores/file";
-import { getFileTypeFromKey, downloadFile, getMissingChunkIndices, processBatch } from "@/lib/utils";
-import { getFileDownloadUrl, getFileUrl, moveToTrash, toggleLike, uploadChunk } from "@/lib/api";
-import { MAX_CONCURRENTS, binaryExtensions, DIRECT_DOWNLOAD_LIMIT } from "@/lib/types";
+import {
+  useActiveSelectedKeys,
+  useFileDataStore,
+  useFileUIStore,
+} from "@/stores/file";
+import {
+  getFileTypeFromKey,
+  downloadFile,
+  getMissingChunkIndices,
+  processBatch,
+} from "@/lib/utils";
+import {
+  getFileDownloadUrl,
+  getFileUrl,
+  moveToTrash,
+  toggleLike,
+  uploadChunk,
+} from "@/lib/api";
+import {
+  MAX_CONCURRENTS,
+  binaryExtensions,
+  DIRECT_DOWNLOAD_LIMIT,
+} from "@/lib/types";
 import { toast } from "sonner";
 import { shouldBlur } from "@/lib/utils";
 import { FileItem, FileType, MAX_CHUNK_SIZE } from "@shared/types";
 import { useGeneralSettingsStore } from "@/stores/general-store";
 import { usePreviewStore } from "@/stores/preview-store";
 
+/** 判断当前浏览器是否为移动端浏览器。 */
+function isMobileBrowser() {
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
 
+/** 判断移动端大媒体文件是否应交给浏览器直接打开。 */
+function shouldOpenLargeMediaOnMobile(fileType: FileType, fileSize: number) {
+  return (
+    isMobileBrowser() &&
+    fileSize > DIRECT_DOWNLOAD_LIMIT &&
+    (fileType === FileType.Audio || fileType === FileType.Video)
+  );
+}
+
+/** 提供文件卡片的选择、查看、下载和编辑等操作。 */
 export function useFileCardActions(file: FileItem) {
-  const {
-    updateFileMetadata,
-    moveToTrashLocal,
-  } = useFileDataStore();
-  
-  const {
-    toggleSelection,
-  } = useFileUIStore();
-  
+  const { updateFileMetadata, moveToTrashLocal } = useFileDataStore();
+
+  const { toggleSelection } = useFileUIStore();
+
   const { safeMode } = useGeneralSettingsStore();
 
   const { openPreview } = usePreviewStore();
@@ -32,13 +60,13 @@ export function useFileCardActions(file: FileItem) {
   const [isResuming, setIsResuming] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-
   const isSelected = selectedKeys.includes(file.name);
   const fileType = useMemo(() => getFileTypeFromKey(file.name), [file.name]);
   const blur = shouldBlur({ safeMode, tags: file.metadata?.tags ?? [] });
   const isIncompleteUpload =
     file.metadata?.chunkInfo &&
-    file.metadata.chunkInfo.uploadedIndices?.length !== file.metadata.chunkInfo.total;
+    file.metadata.chunkInfo.uploadedIndices?.length !==
+      file.metadata.chunkInfo.total;
 
   const handleSelect = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -58,58 +86,89 @@ export function useFileCardActions(file: FileItem) {
     navigator.clipboard.writeText(url);
     toast.success("文件链接复制成功~");
   };
-  
+
   const handleShare = () => {
     setShowShare(true);
   };
 
   const handleDownload = () => {
     const url = getFileDownloadUrl(file.name);
-    void downloadFile(url, file.metadata).then((result) => {
-      if (result.status === "cancelled") return;
-    }).catch(() => {
-      toast.error("下载失败");
-    });
+    const fileName = file.metadata?.fileName || file.name;
+    const fileSize = file.metadata?.fileSize || 0;
+
+    if (shouldOpenLargeMediaOnMobile(fileType, fileSize)) {
+      toast.info("已打开文件链接，请使用浏览器下载");
+      window.open(getFileUrl(file.name), "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    const toastId =
+      fileSize > DIRECT_DOWNLOAD_LIMIT
+        ? toast.loading(`准备下载: ${fileName}`)
+        : null;
+
+    void downloadFile(url, file.metadata, (progress) => {
+      if (!toastId) return;
+      toast.loading(`下载中: ${fileName} (${progress.percentage}%)`, {
+        id: toastId,
+      });
+    })
+      .then((result) => {
+        if (!toastId) return;
+        if (result.status === "cancelled") {
+          toast.dismiss(toastId);
+          return;
+        }
+        toast.success(`下载完成: ${fileName}`, { id: toastId });
+      })
+      .catch(() => {
+        if (toastId) {
+          toast.error(`下载失败: ${fileName}`, { id: toastId });
+        } else {
+          toast.error("下载失败");
+        }
+      });
   };
-  
+
   const handleView = () => {
     const url = getFileUrl(file.name);
     const fileName = file.metadata?.fileName?.toLowerCase() || "";
     const fileSize = file.metadata?.fileSize || 0;
-    
-    // 文本阅读器：如果是文档类型且不是已知的二进制格式
-    if (
-      fileType === FileType.Document && 
-      !binaryExtensions.some(ext => fileName.endsWith(ext))
-    ) {
-      // 大文件直接触发下载
-      if (fileSize > DIRECT_DOWNLOAD_LIMIT) {
-        handleDownload();
+
+    const canPreviewAsText =
+      fileType === FileType.Document &&
+      !binaryExtensions.some((ext) => fileName.endsWith(ext)) &&
+      fileSize <= DIRECT_DOWNLOAD_LIMIT;
+
+    if (fileType === FileType.Document) {
+      if (!canPreviewAsText) {
+        window.open(url, "_blank", "noopener,noreferrer");
         return;
       }
-      openPreview(file, 'text');
+
+      openPreview(file, "text");
       return;
     }
 
     // 视频预览（预览器支持流式播放，不需要改变）
     if (fileType === FileType.Video) {
-      openPreview(file, 'video');
+      openPreview(file, "video");
       return;
     }
 
     // 音频预览（预览器支持流式播放，不需要改变）
     if (fileType === FileType.Audio) {
-      openPreview(file, 'audio');
+      openPreview(file, "audio");
       return;
     }
-    
+
     // 其他类型（图片、PDF、压缩包等）
     // 大文件直接触发下载
     if (fileSize > DIRECT_DOWNLOAD_LIMIT) {
       handleDownload();
       return;
     }
-    
+
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
@@ -137,7 +196,9 @@ export function useFileCardActions(file: FileItem) {
     inputRef.current?.click();
   };
 
-  const handleResumeFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleResumeFileSelect = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile || !isIncompleteUpload) return;
 
@@ -195,7 +256,7 @@ export function useFileCardActions(file: FileItem) {
     isResuming,
 
     inputRef,
-    
+
     // Actions
     setShowDetail,
     setShowEdit,
