@@ -49,6 +49,7 @@ import {
 import {
   downloadFile,
   downloadFiles,
+  getFileTypeFromKey,
   processBatch,
   type DirectoryHandleResult,
 } from "@/lib/utils";
@@ -56,9 +57,15 @@ import { ViewMode } from "@/lib/types";
 import { BatchEditTagsDialog } from "./BatchEditTagsDialog";
 import { BatchRenameDialog } from "./BatchRenameDialog";
 import { BatchShareDialog } from "./BatchShareDialog";
+import { MobileBatchDownloadDialog } from "./MobileBatchDownloadDialog";
 import { DownloadDirectoryGuide } from "@/components/download/DownloadDirectoryGuide";
 import { toast } from "sonner";
-import { FileTag, FileType, MAX_FILES_IN_BUNDLE } from "@shared/types";
+import {
+  FileMetadata,
+  FileTag,
+  FileType,
+  MAX_FILES_IN_BUNDLE,
+} from "@shared/types";
 
 // 文件类型图标映射
 const typeIcons: Record<FileType, typeof ImageIcon> = {
@@ -101,9 +108,17 @@ export function BatchOperationsBar() {
   const [showBatchRename, setShowBatchRename] = useState(false);
   const [showBatchShare, setShowBatchShare] = useState(false);
   const [showDirGuide, setShowDirGuide] = useState(false);
+  const [showMobileBatchDownload, setShowMobileBatchDownload] = useState(false);
+  const [mobileDownloadFiles, setMobileDownloadFiles] = useState<
+    Array<{
+      key: string;
+      metadata: FileMetadata;
+      fileType: FileType;
+    }>
+  >([]);
   const [pendingDownloadFiles, setPendingDownloadFiles] = useState<Array<{
     key: string;
-    metadata: (typeof allItems)[0]["metadata"];
+    metadata: FileMetadata;
   }> | null>(null);
 
   const filteredFiles = useFilteredFiles();
@@ -179,7 +194,7 @@ export function BatchOperationsBar() {
 
   /** ===== 开始批量下载 ===== */
   const startBatchDownload = async (
-    files: Array<{ key: string; metadata: (typeof allItems)[0]["metadata"] }>,
+    files: Array<{ key: string; metadata: FileMetadata }>,
     dirHandleResult?: DirectoryHandleResult
   ) => {
     const toastId = toast.loading(`准备下载 ${files.length} 个文件...`);
@@ -250,11 +265,16 @@ export function BatchOperationsBar() {
       .map((key) => {
         const file = allItemMap.get(key);
         if (!file) return null;
-        return { key, metadata: file.metadata };
+        return {
+          key,
+          metadata: file.metadata,
+          fileType: getFileTypeFromKey(key),
+        };
       })
       .filter(Boolean) as Array<{
       key: string;
-      metadata: (typeof allItems)[0]["metadata"];
+      metadata: FileMetadata;
+      fileType: FileType;
     }>;
 
     if (files.length === 1) {
@@ -285,6 +305,15 @@ export function BatchOperationsBar() {
 
     if (files.length > MAX_FILES_IN_BUNDLE) {
       toast.error(`批量下载最多支持 ${MAX_FILES_IN_BUNDLE} 个文件`);
+      return;
+    }
+
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const canUseDirectoryPicker = "showDirectoryPicker" in window && !isMobile;
+
+    if (!canUseDirectoryPicker) {
+      setMobileDownloadFiles(files);
+      setShowMobileBatchDownload(true);
       return;
     }
 
@@ -625,6 +654,12 @@ export function BatchOperationsBar() {
         files={selectedItems}
         open={showBatchShare}
         onOpenChange={setShowBatchShare}
+      />
+
+      <MobileBatchDownloadDialog
+        files={mobileDownloadFiles}
+        open={showMobileBatchDownload}
+        onOpenChange={setShowMobileBatchDownload}
       />
 
       <DownloadDirectoryGuide

@@ -501,16 +501,18 @@ export function GeneralTab({
               </div>
             </div>
             <HintBox>
-              首次批量下载需选择目录。建议提前创建 OtterHub
+              首次保存大文件或批量下载需选择目录。建议提前创建 OtterHub
               文件夹。目录授权失效时会重新提示。
             </HintBox>
           </SettingCard>
         ) : (
           <Alert className="border-yellow-500/50 bg-yellow-500/10">
             <AlertCircle className="h-4 w-4 text-yellow-600" />
-            <AlertTitle className="text-yellow-800">下载功能不可用</AlertTitle>
+            <AlertTitle className="text-yellow-800">
+              自定义下载目录不可用
+            </AlertTitle>
             <AlertDescription className="text-yellow-700">
-              当前浏览器不支持自定义下载目录，请使用 Chrome 或 Edge。
+              当前浏览器将使用默认下载方式。移动端批量下载会逐个确认保存文件。
             </AlertDescription>
           </Alert>
         )}

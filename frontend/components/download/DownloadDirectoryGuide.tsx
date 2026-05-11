@@ -26,7 +26,7 @@ const FEATURES = [
     Icon: Save,
     color: "text-purple-500",
     title: "记住选择",
-    desc: "批量下载时自动使用选择的目录",
+    desc: "大文件和批量下载时自动使用选择的目录",
   },
 ];
 
@@ -55,7 +55,7 @@ export function DownloadDirectoryGuide({
             选择下载目录
           </DialogTitle>
           <DialogDescription>
-            首次使用需要选择保存下载文件的目录
+            首次保存大文件或批量下载时，需要选择下载目录
           </DialogDescription>
         </DialogHeader>
 
