@@ -27,11 +27,7 @@ import { shouldBlur } from "@/lib/utils";
 import { FileItem, FileType, MAX_CHUNK_SIZE } from "@shared/types";
 import { useGeneralSettingsStore } from "@/stores/general-store";
 import { usePreviewStore } from "@/stores/preview-store";
-
-/** 判断当前浏览器是否为移动端浏览器。 */
-function isMobileBrowser() {
-  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-}
+import { isMobileBrowser } from "@/hooks/use-mobile";
 
 /** 判断移动端大媒体文件是否应交给浏览器直接打开。 */
 function shouldOpenLargeMediaOnMobile(fileType: FileType, fileSize: number) {
@@ -109,9 +105,10 @@ export function useFileCardActions(file: FileItem) {
 
     void downloadFile(url, file.metadata, (progress) => {
       if (!toastId) return;
-      toast.loading(`下载中: ${fileName} (${progress.percentage}%)`, {
-        id: toastId,
-      });
+      const message = progress.dirName
+        ? `下载到 ${progress.dirName}: ${fileName} (${progress.percentage}%)`
+        : `下载中: ${fileName} (${progress.percentage}%)`;
+      toast.loading(message, { id: toastId });
     })
       .then((result) => {
         if (!toastId) return;
@@ -119,7 +116,10 @@ export function useFileCardActions(file: FileItem) {
           toast.dismiss(toastId);
           return;
         }
-        toast.success(`下载完成: ${fileName}`, { id: toastId });
+        const message = result.dirName
+          ? `下载完成: ${fileName}，已保存到 ${result.dirName}`
+          : `下载完成: ${fileName}`;
+        toast.success(message, { id: toastId });
       })
       .catch(() => {
         if (toastId) {

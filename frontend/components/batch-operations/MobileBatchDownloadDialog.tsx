@@ -95,9 +95,9 @@ export function MobileBatchDownloadDialog({
 
     try {
       if (shouldOpenLargeMedia(entry)) {
-        window.open(getFileUrl(entry.key), "_blank", "noopener,noreferrer");
         updateStatus(index, "success");
-        toast.info("已打开文件链接，请使用浏览器下载");
+        toast.info("已打开文件链接，请使用浏览器保存");
+        window.open(getFileUrl(entry.key), "_blank", "noopener,noreferrer");
         return;
       }
 

@@ -465,7 +465,7 @@ export function GeneralTab({
               <div className="flex items-center gap-3">
                 <FolderOpen className="h-5 w-5 text-blue-500" />
                 <div>
-                  <p className="font-medium text-sm">批量下载目录</p>
+                  <p className="font-medium text-sm">大文件/批量下载目录</p>
                   <p className="text-xs text-muted-foreground">
                     {currentDir || "未设置"}
                   </p>
@@ -512,7 +512,7 @@ export function GeneralTab({
               自定义下载目录不可用
             </AlertTitle>
             <AlertDescription className="text-yellow-700">
-              当前浏览器将使用默认下载方式。移动端批量下载会逐个确认保存文件。
+              当前浏览器将使用默认下载方式。移动端批量下载需逐个打开/保存文件。
             </AlertDescription>
           </Alert>
         )}

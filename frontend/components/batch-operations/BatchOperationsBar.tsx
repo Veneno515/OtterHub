@@ -66,6 +66,7 @@ import {
   FileType,
   MAX_FILES_IN_BUNDLE,
 } from "@shared/types";
+import { isMobileBrowser } from "@/hooks/use-mobile";
 
 // 文件类型图标映射
 const typeIcons: Record<FileType, typeof ImageIcon> = {
@@ -198,21 +199,30 @@ export function BatchOperationsBar() {
     dirHandleResult?: DirectoryHandleResult
   ) => {
     const toastId = toast.loading(`准备下载 ${files.length} 个文件...`);
+    let downloadDirName: string | null = null;
 
     try {
       const downloadOptions = {
         files,
         getUrl: getFileDownloadUrl,
         onDirectorySelected: (dirName: string) => {
+          downloadDirName = dirName;
           toast.loading(`正在下载到 ${dirName}...`, { id: toastId });
         },
         onDirectoryReused: (dirName: string) => {
+          downloadDirName = dirName;
           toast.loading(`正在下载到 ${dirName}...`, { id: toastId });
         },
         onFileStart: (index: number, fileName: string) => {
-          toast.loading(`下载中 (${index + 1}/${files.length}): ${fileName}`, {
-            id: toastId,
-          });
+          const prefix = downloadDirName
+            ? `下载到 ${downloadDirName}`
+            : "下载中";
+          toast.loading(
+            `${prefix} (${index + 1}/${files.length}): ${fileName}`,
+            {
+              id: toastId,
+            }
+          );
         },
         onFileComplete: (index: number, fileName: string, success: boolean) => {
           if (!success) {
@@ -286,17 +296,20 @@ export function BatchOperationsBar() {
           getFileDownloadUrl(key),
           metadata,
           (progress) => {
-            toast.loading(
-              `下载中: ${metadata.fileName} (${progress.percentage}%)`,
-              { id: toastId }
-            );
+            const message = progress.dirName
+              ? `下载到 ${progress.dirName}: ${metadata.fileName} (${progress.percentage}%)`
+              : `下载中: ${metadata.fileName} (${progress.percentage}%)`;
+            toast.loading(message, { id: toastId });
           }
         );
         if (result.status === "cancelled") {
           toast.dismiss(toastId);
           return;
         }
-        toast.success(`下载完成: ${metadata.fileName}`, { id: toastId });
+        const message = result.dirName
+          ? `下载完成: ${metadata.fileName}，已保存到 ${result.dirName}`
+          : `下载完成: ${metadata.fileName}`;
+        toast.success(message, { id: toastId });
       } catch (_error) {
         toast.error(`下载失败: ${metadata.fileName}`, { id: toastId });
       }
@@ -308,7 +321,7 @@ export function BatchOperationsBar() {
       return;
     }
 
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const isMobile = isMobileBrowser();
     const canUseDirectoryPicker = "showDirectoryPicker" in window && !isMobile;
 
     if (!canUseDirectoryPicker) {
